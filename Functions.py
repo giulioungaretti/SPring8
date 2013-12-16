@@ -13,7 +13,6 @@ from scipy.ndimage import measurements as meas
 from scipy.ndimage import center_of_mass
 from scipy.ndimage import median_filter
 from scipy.signal import medfilt
-import os
 from scipy.optimize import curve_fit
 from matplotlib.patches import Rectangle
 from matplotlib.pyplot import ion, ioff, close, imshow, cm
@@ -42,7 +41,8 @@ class SPring8_image(object):
 
     def read_detector(self, name=1):
         '''
-        Read the detector image and return a dictionary with the information contained
+        Read the detector image and return a dictionary with the
+        information contained
         in the header and the image as a numpy array.
         name can be 1 for ccd or 2 for pilatus
         TO - Do add angles from the diffractometers
@@ -176,7 +176,8 @@ class SPring8_image(object):
     def analyze_img(self, std=15, plot_me=False, fit=True, details=False):
         '''
         analyze the image and gives the result black.
-        Fitting with Gaussian and showing the cuts, and the fits is controlled via the
+        Fitting with Gaussian and showing the cuts, and the fits
+        is controlled via the
         optional boolean paramters fit, plot_mem and details
         '''
         try:
@@ -456,7 +457,8 @@ def plot_dataframe(data, error=False, log=False):
     return fig, ax
 
 
-def plot_shutters(on_off, data, ax, offset, alpha=.22, facecolor='#9EB57F', **kwargsplot):
+def plot_shutters(on_off, data, ax,
+                  offset, alpha=.22, facecolor='#9EB57F', **kwargsplot):
     '''
     Examples:
 
@@ -572,6 +574,16 @@ def spline_do(x, y, ax, k=3, s=7, n=1, diff=True, plot=True, error=False):
     if plot:
         ax.legend(loc=0)
     return xs, ys, d_ys, dd_ys
+
+
+def load_data_frame(name):
+    try:
+        data = pd.read_csv(str(name) + 'data_frame.csv', index_col=0)
+        print 'data frame loaded'
+        return data
+    except:
+        print 'not found'
+        return None
 
 
 def pandify(samples, roi, name_file, save=True):
@@ -695,5 +707,41 @@ def create_stacked_layout(n=3):
     return layout
 
 
+def save_spline_par(parameters_dict, name):
+    '''
+    Saves parameters to disk with suffix "spline_parameters" as a pickle
+    object
+    -----
+    The required arguments are the dictionary of the data and the name
+    of the folder
+    '''
+    try:
+        print 'searching parameters_dict object'
+        parameters_dict
+        print 'parameters_dict object found, dumping it to disk'
+        pickle.dump(parameters_dict,
+                    open(str(name) + 'spline_parameters' + ".p", "wb"))
+    except Exception as e:
+        print e
+        print 'no spline_parameters at all , problem ! '
+
+
+def load_spline_par(name):
+    '''
+    Load parameters dictionary from disk with suffix "spline_parameters"
+    -----
+    The required argument is the name of the folder (sample).
+    ----
+    Returns the dictionary.
+    '''
+    try:
+        parameters_dict = pickle.load(
+            open(str(name) + 'spline_parameters' + ".p", "rb"))
+        print 'spline_parameters dump found, using it !'
+        return parameters_dict
+    except:
+        print 'no parameters_dict found, define them'
+        return None
+    
 def Version():
-    return 'last update-2013-12-11 6:19 '
+    return 'last update Date: 2013-12-16'

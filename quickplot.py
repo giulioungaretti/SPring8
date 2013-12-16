@@ -68,7 +68,7 @@ def do(data, structure, parameters_dict):
     ax[2].set_ylabel('Normalized intensity (a.u)')
     [j.legend(loc=0) for j in ax]
     ax[2].set_xlabel('Time (s)')
-    fig.show()
+    return fig, ax
 
 
 def do_derivatives(data, parameters_dict, shutter=False):
@@ -99,11 +99,26 @@ def do_derivatives(data, parameters_dict, shutter=False):
     ax.set_ylabel('Normalized intensity (a.u)')
     ax.legend()
 
-    return fig
+    return fig, ax
 
 
-def do_diff_derivatives(data, parameters_dict, shutter=False):
-    fig, ax = subplots()
+def create_par_dict():
+    parameters_dict = {}
+    structures = ['WZ', 'TW', 'ZB']
+    for i in structures:
+        value = raw_input('Insert spline value for %s: ' % (i))
+        parameters_dict[i] = float(value)
+    print 'done'
+    return parameters_dict
+
+
+def do_diff_derivatives(data, parameters_dict, structure, shutter=False, **kwargs):
+    '''
+    Perform the difference of the derivatives I_WZ  and I[structure]
+    of the spline fitted data with  the parameters specified
+    in the parameters_dict.
+    '''
+    fig, ax = subplots(**kwargs)
 
     on_off = save_suhtters(name)
 
@@ -115,23 +130,28 @@ def do_diff_derivatives(data, parameters_dict, shutter=False):
     y = data_temp.Int_WZ
     xs_WZ, ys_WZ, d_ys_WZ, dd_ys_WZ = spline_do(
         x, y, [ax], n=3, s=parameters_dict['WZ'], k=3, plot=False)
-    ax.legend()
     if shutter:
         plot_shutters(on_off, data_temp, [ax],
                       offset=offset_list, ls='--', color='k')
     # now to ZV
-    y = data_temp.Int_TW
+    y = data_temp['Int_' + str(structure)]
     xs_TW, ys_TW, d_ys_TW, dd_ys_TW = spline_do(
         x, y, [ax], n=3,
-        s=parameters_dict['TW'], k=3, plot=False)
+        s=parameters_dict[structure], k=3, plot=False)
     diff = (norm(d_ys_WZ) - norm(d_ys_TW))  # / (d_ys_WZ + d_ys_TW )
-
-    ax.plot(xs_TW, diff)
+    # to create nice legend
+    line1, = ax.plot(xs_TW, diff, c='#00A0B0',
+                     label=r'$I{\prime}_{WZ} - I{\prime}_{%s} $'%(structure))
     ax2 = ax.twinx()
-    ax2.set_ylabel('NIG (Pa)')
-    ax2.plot(x[data_temp.NIG != 1], data_temp.NIG[data_temp.NIG != 1])
+    ax2.set_ylabel('Pressure (Pa)')
+    # to create nice legend
+    line2, = ax2.plot(x[data_temp.NIG != 1], data_temp.NIG[data_temp.NIG != 1],
+                      c='#EB6841', label='NIG')
     ax.set_ylabel('Normalized intensity (a.u)')
-    ax.legend()
+    ax2.yaxis.label.set_color(line2.get_color())  # color the label
+    ax2.tick_params(axis='y', colors=line2.get_color())
+    lines = [line1, line2]  # to create nice legend
+    ax.legend(lines, [l.get_label()
+              for l in lines], loc=0)  # to create nice legend
     fig.show()
-
-    return fig
+    return fig, ax
