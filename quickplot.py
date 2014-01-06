@@ -170,9 +170,6 @@ def do_diff_derivatives(data, parameters_dict, structure, name, shutter=False, n
     if sum_on:
         ax3 = ax.twinx()
         ax3.set_ylabel(' intensity (a.u)')
-        # line2, = ax3.plot(xs_TW, summed,
-        #                  c='orange',
-        # label=r'$I{\prime}_{WZ} + I{\prime}_{%s}$' % (structure))
         line2, = ax3.plot(xs_TW, summ_int,
                           '.',
                           c='orange',
