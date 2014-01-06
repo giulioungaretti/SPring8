@@ -322,7 +322,7 @@ def norm(df, scale=1):
     return df_norm * scale
 
 
-def define_roi(files, name, cond=None):
+def define_roi(files, name, cond=None, kind=2):
     '''
     cond = yes to delete roi
     '''
@@ -355,7 +355,7 @@ def define_roi(files, name, cond=None):
             print '- create ZB'
             # first file  should only have ZB/twin
             print files[0]
-            ZB = get_roi(files[0], 2, log=True)
+            ZB = get_roi(files[0], kind, log=True)
             roi['ZB'] = ZB
 
         try:
@@ -365,7 +365,7 @@ def define_roi(files, name, cond=None):
             print '- create TW'
             # random late file  should  have strong  ZB/twin
             print files[50]
-            TW = get_roi(files[50], 2, log=True)
+            TW = get_roi(files[50], kind, log=True)
             roi['TW'] = TW
 
         try:
@@ -376,7 +376,7 @@ def define_roi(files, name, cond=None):
             # any file in between the fist and the last should be good
             name_file = files[randint(0, high=len(files))]
             print name_file
-            WZ = get_roi(name_file, 2, log=True)
+            WZ = get_roi(name_file, kind, log=True)
             roi['WZ'] = WZ
 
         # Dump roi to disk
