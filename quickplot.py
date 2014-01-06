@@ -210,3 +210,10 @@ shutter:''',
     ax.set_ylabel('Normalized intensity (a.u)')
     ax.set_ylim(-1, 1)
     return fig, ax
+
+
+def shade(on_off, ax):
+    for on, off in zip(on_off[:-1:2], on_off[1::2]):
+            on = on + data.index.values.min()
+            off = off + data.index.values.min()
+            ax.add_patch(Rectangle((on, -1), off - on, 2, facecolor="grey"))
