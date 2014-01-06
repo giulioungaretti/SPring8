@@ -175,7 +175,7 @@ def do_diff_derivatives(data, parameters_dict, structure, name, shutter=False, n
                           c='orange',
                           label=r'$I_{WZ} + I_{%s}$' % (structure))
         lines = [line1, line2]  # to create nice legend
-        ax3.legend(lines, [l.get_label()
+        ax.legend(lines, [l.get_label()
                            for l in lines], loc=3)  # to create nice legend
     if shade:
         for on, off in zip(on_off[:-1:2], on_off[1::2]):
