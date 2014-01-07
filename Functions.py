@@ -553,6 +553,7 @@ def spline_do(x, y, ax, k=3, s=7, n=1, diff=True, plot=True, error=False):
     Returns ys,d_ys: the y values of the spline and the derivative.
 
     '''
+    # xs = np.array(x).astype(float)
     s = UnivariateSpline(x, y, k=k, s=s)
     xs = linspace(x.values.min(), x.values.max(), len(x))
     ys = s(xs)
@@ -742,6 +743,41 @@ def load_spline_par(name):
     except:
         print 'no parameters_dict found, define them'
         return None
-    
+
+
+def shade(on_off, ax):
+    '''
+    shade the ax axsis object between on and off
+    Takes the list of on-off values (!) and one
+    axis object.
+    '''
+    for on, off in zip(on_off[:-1:2], on_off[1::2]):
+            # on = on + data.index.values.min()
+            # off = off + data.index.values.min()
+            ax.add_patch(
+                Rectangle((on, -1),
+                          off - on, ax.get_ylim()[1],
+                          facecolor="grey", alpha=0.5))
+
+
+def update_legend(fig, loc=0):
+    '''
+    takes a figure as argument and updates
+    the legend with the label of each line
+    except ones without label.
+    '''
+    lines = []
+    for ax in fig.get_axes():
+        ax.legend_ = None
+        plt.draw()
+        for line in ax.lines:
+            if '_line' in line.get_label():
+                continue
+            else:
+                lines.append(line)
+    ax.legend(lines, [l.get_label()
+                      for l in lines], loc=loc)  # to create nice legend
+
+
 def Version():
-    return 'last update Date: 2013-12-16'
+    return 'last update Date: Date: 7-1-2014'

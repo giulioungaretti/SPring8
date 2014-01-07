@@ -119,7 +119,11 @@ def create_par_dict():
     return parameters_dict
 
 
-def do_diff_derivatives(data, parameters_dict, structure, name, shutter=False, nig=True, sum_on=False, shade=True, **kwargs):
+def do_diff_derivatives(data, parameters_dict,
+                        structure, name,
+                        shutter=False, nig=True,
+                        sum_on=False, shade=True,
+                        numeric=False, **kwargs):
     '''
     Perform the difference of the derivatives I_WZ  and I[structure]
     of the spline fitted data with  the parameters specified
@@ -147,11 +151,27 @@ def do_diff_derivatives(data, parameters_dict, structure, name, shutter=False, n
         x, y, [ax], n=3,
         s=parameters_dict[structure], k=3, plot=False)
     diff = (norm(d_ys_WZ) - norm(d_ys_TW))  # / (d_ys_WZ + d_ys_TW )
-    summed = d_ys_WZ + d_ys_TW
     summ_int = y_wz + array(y)
-    # to create nice legend
-    line1, = ax.plot(xs_TW, diff, c='#00A0B0',
-                     label=r'$I{\prime}_{WZ} - I{\prime}_{%s}$' % (structure))
+    # spline derivative
+    if not numeric:
+        line1, = ax.plot(xs_TW + 10, diff, c='#00A0B0',
+                         label=r'$I{\prime}_{WZ} ' +
+                         '- I{\prime}_{%s}$' % (structure))
+    # numeric derivative
+    if numeric:
+        mean = 15
+        median = 1
+        d_wz = pd.rolling_mean(
+            pd.rolling_median(data.Int_WZ, median).diff(), mean)
+        d_tw = pd.rolling_mean(
+            pd.rolling_median(data.Int_TW, median).diff(), mean)
+        diff = d_wz - d_tw
+        line1, = ax.plot(xs_TW, diff, '.', #c='#C02942',
+                         label=r'$I{\prime}_{WZ} ' +
+                         '- I{\prime}_{%s}$' % (structure))
+        line1, = ax.plot(xs_TW, smooth(diff,15), '-',
+        # c='#C02942'
+        )
     if nig:
         ax2 = ax.twinx()
         ax2.set_ylabel('Pressure (Pa)')
@@ -170,20 +190,30 @@ def do_diff_derivatives(data, parameters_dict, structure, name, shutter=False, n
     if sum_on:
         ax3 = ax.twinx()
         ax3.set_ylabel(' intensity (a.u)')
+        line2, = ax3.plot(xs_TW, smooth(summ_int,19),
+                          '-',
+                          c='#ECD078')  # ,
+        #                   label=r'$I_{WZ} + I_{%s}$' % (structure))
         line2, = ax3.plot(xs_TW, summ_int,
                           '.',
-                          c='orange',
-                          label=r'$I_{WZ} + I_{%s}$' % (structure))
+                          c='#D95B43', label=r'$I_{WZ} + I_{%s}$' % (structure))
         lines = [line1, line2]  # to create nice legend
         ax.legend(lines, [l.get_label()
-                           for l in lines], loc=3)  # to create nice legend
+                          for l in lines], loc=3)  # to create nice legend
     if shade:
         for on, off in zip(on_off[:-1:2], on_off[1::2]):
             on = on + data.index.values.min()
             off = off + data.index.values.min()
-            ax.add_patch(Rectangle((on, -1), off - on, 2, facecolor="grey"))
+            ax.add_patch(
+                Rectangle((on, -1), off - on, 2, facecolor="grey", alpha=.5))
+    # uncomment below to simulate a 10 sec delay, which is unrasonable
+        # for on, off in zip(on_off[:-1:2], on_off[1::2]):
+        #     on = on  - 10 + data.index.values.min()
+        #     off = off -10 + data.index.values.min()
+        #     ax.add_patch(Rectangle((on, -1), off - on, 2, facecolor="red",alpha=.5))
+    ax.set_ylim(diff.min(), diff.max())
     ax.annotate('Open',
-                xy=(203, .85),
+                xy=(203, diff.max()*.85),
                 xytext = (0, 0), fontsize=10,
                 weight= 'semibold', color='white',
                 horizontalalignment='center', rotation=45,
@@ -191,26 +221,18 @@ def do_diff_derivatives(data, parameters_dict, structure, name, shutter=False, n
                 textcoords = 'offset points')
     ax.annotate('''In
 shutter:''',
-                xy=(135, .71),
+                xy=(135, diff.max()*.71),
                 xytext = (0, 0), fontsize=10,
                 weight= 'semibold', color='black',
                 horizontalalignment='center',
                 bbox = dict(fc='k', alpha=.0),
                 textcoords = 'offset points')
     ax.annotate('Close',
-                xy=(175, .85),
+                xy=(175, diff.max()*.85),
                 xytext = (0, 0), fontsize=11,
                 weight= 'semibold', color= '#353535',
                 horizontalalignment='center', rotation=45,
                 bbox = dict(fc='k', alpha=.0),
                 textcoords = 'offset points')
     ax.set_ylabel('Normalized intensity (a.u)')
-    ax.set_ylim(-1, 1)
     return fig, ax
-
-
-def shade(on_off, ax):
-    for on, off in zip(on_off[:-1:2], on_off[1::2]):
-            on = on + data.index.values.min()
-            off = off + data.index.values.min()
-            ax.add_patch(Rectangle((on, -1), off - on, 2, facecolor="grey"))
