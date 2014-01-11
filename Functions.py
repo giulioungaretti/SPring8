@@ -754,10 +754,10 @@ def shade(on_off, ax):
     for on, off in zip(on_off[:-1:2], on_off[1::2]):
             # on = on + data.index.values.min()
             # off = off + data.index.values.min()
-            ax.add_patch(
-                Rectangle((on, -1),
-                          off - on, ax.get_ylim()[1],
-                          facecolor="grey", alpha=0.5))
+        ax.add_patch(
+            Rectangle((on, -1),
+                      off - on, ax.get_ylim()[1],
+                      facecolor="grey", alpha=0.5))
 
 
 def update_legend(fig, loc=0):
@@ -777,6 +777,32 @@ def update_legend(fig, loc=0):
                 lines.append(line)
     ax.legend(lines, [l.get_label()
                       for l in lines], loc=loc)  # to create nice legend
+
+
+def color_ticks(fig, color_labeled_lines=True):
+    '''
+    change color of y tick labels with the color
+    of the labeled line, works even with multiple lines
+    but will take the color of the last line, in order
+    of plotting.
+    Not really working perfectly with mislabeled plots)
+    '''
+    for ax in fig.get_axes():
+        if len(ax.lines) > 2:
+            print 'check the result'
+        for line in ax.lines:
+            print ax.get_ylim()
+            print line.get_label()
+            print '--'
+            if '_line' not in line.get_label():
+                    for i in ax.get_yticklabels():
+                        i.set_color(line.get_color())
+            else:
+                continue
+            # else:
+            #     if '_line' in line.get_label():
+            #         for i in ax.get_yticklabels():
+            #             i.set_color(line.get_color())
 
 
 def Version():

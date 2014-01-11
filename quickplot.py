@@ -154,7 +154,7 @@ def do_diff_derivatives(data, parameters_dict,
     summ_int = y_wz + array(y)
     # spline derivative
     if not numeric:
-        line1, = ax.plot(xs_TW + 10, diff, c='#00A0B0',
+        line1, = ax.plot(xs_TW, diff, c='#00A0B0',
                          label=r'$I{\prime}_{WZ} ' +
                          '- I{\prime}_{%s}$' % (structure))
     # numeric derivative
@@ -166,12 +166,12 @@ def do_diff_derivatives(data, parameters_dict,
         d_tw = pd.rolling_mean(
             pd.rolling_median(data.Int_TW, median).diff(), mean)
         diff = d_wz - d_tw
-        line1, = ax.plot(xs_TW, diff, '.', #c='#C02942',
+        line1, = ax.plot(xs_TW, diff, '.',  # c='#C02942',
                          label=r'$I{\prime}_{WZ} ' +
                          '- I{\prime}_{%s}$' % (structure))
-        line1, = ax.plot(xs_TW, smooth(diff,15), '-',
-        # c='#C02942'
-        )
+        line1, = ax.plot(xs_TW, smooth(diff, 15), '-',
+                         #c='#C02942'
+                         )
     if nig:
         ax2 = ax.twinx()
         ax2.set_ylabel('Pressure (Pa)')
@@ -184,13 +184,10 @@ def do_diff_derivatives(data, parameters_dict,
         lines = [line1, line2]  # to create nice legend
         ax.legend(lines, [l.get_label()
                   for l in lines], loc=0)  # to create nice legend
-    # if not nig:
-    #     ax.legend(loc=0)
-
     if sum_on:
         ax3 = ax.twinx()
         ax3.set_ylabel(' intensity (a.u)')
-        line2, = ax3.plot(xs_TW, smooth(summ_int,19),
+        line2, = ax3.plot(xs_TW, smooth(summ_int, 19),
                           '-',
                           c='#ECD078')  # ,
         #                   label=r'$I_{WZ} + I_{%s}$' % (structure))
@@ -213,26 +210,29 @@ def do_diff_derivatives(data, parameters_dict,
         #     ax.add_patch(Rectangle((on, -1), off - on, 2, facecolor="red",alpha=.5))
     ax.set_ylim(diff.min(), diff.max())
     ax.annotate('Open',
-                xy=(203, diff.max()*.85),
-                xytext = (0, 0), #fontsize=10,
+                xy=(203, diff.max() * .85),
+                xytext = (0, 0),  # fontsize=10,
                 weight= 'semibold', color='white',
                 horizontalalignment='center', rotation=45,
                 bbox = dict(fc='k', alpha=.0),
                 textcoords = 'offset points')
     ax.annotate('''In
 shutter:''',
-                xy=(135, diff.max()*.71),
-                xytext = (0, 0),# fontsize=10,
+                xy=(135, diff.max() * .71),
+                xytext = (0, 0),  # fontsize=10,
                 weight= 'semibold', color='black',
                 horizontalalignment='center',
                 bbox = dict(fc='k', alpha=.0),
                 textcoords = 'offset points')
     ax.annotate('Close',
-                xy=(175, diff.max()*.85),
-                xytext = (0, 0), #fontsize=11,
+                xy=(175, diff.max() * .85),
+                xytext = (0, 0),  # fontsize=11,
                 weight= 'semibold', color= '#353535',
                 horizontalalignment='center', rotation=45,
                 bbox = dict(fc='k', alpha=.0),
                 textcoords = 'offset points')
     ax.set_ylabel('Normalized intensity (a.u)')
     return fig, ax
+
+def version():
+    return 'now'
