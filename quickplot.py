@@ -161,15 +161,17 @@ def do_diff_derivatives(data, parameters_dict,
     if numeric:
         mean = 15
         median = 1
+        wz = pd.rolling_mean(
+            pd.rolling_median(data.Int_WZ, median), mean)
         d_wz = pd.rolling_mean(
             pd.rolling_median(data.Int_WZ, median).diff(), mean)
         d_tw = pd.rolling_mean(
             pd.rolling_median(data.Int_TW, median).diff(), mean)
         diff = d_wz - d_tw
-        line1, = ax.plot(xs_TW, diff, '.',  # c='#C02942',
+        line1, = ax.plot(xs_TW, d_tw, '.',  # c='#C02942',
                          label=r'$I{\prime}_{WZ} ' +
                          '- I{\prime}_{%s}$' % (structure))
-        line1, = ax.plot(xs_TW, smooth(diff, 15), '-',
+        line1, = ax.plot(xs_TW, smooth(d_tw, 15), '-',
                          #c='#C02942'
                          )
     if nig:
@@ -187,11 +189,11 @@ def do_diff_derivatives(data, parameters_dict,
     if sum_on:
         ax3 = ax.twinx()
         ax3.set_ylabel(' intensity (a.u)')
-        line2, = ax3.plot(xs_TW, smooth(summ_int, 19),
+        line2, = ax3.plot(xs_TW, smooth(wz, 15),
                           '-',
                           c='#ECD078')  # ,
         #                   label=r'$I_{WZ} + I_{%s}$' % (structure))
-        line2, = ax3.plot(xs_TW, summ_int,
+        line2, = ax3.plot(xs_TW, wz,
                           '.',
                           c='#D95B43', label=r'$I_{WZ} + I_{%s}$' % (structure))
         lines = [line1, line2]  # to create nice legend
@@ -208,7 +210,7 @@ def do_diff_derivatives(data, parameters_dict,
         #     on = on  - 10 + data.index.values.min()
         #     off = off -10 + data.index.values.min()
         #     ax.add_patch(Rectangle((on, -1), off - on, 2, facecolor="red",alpha=.5))
-    ax.set_ylim(diff.min(), diff.max())
+    # ax.set_ylim(diff.min(), diff.max())
     ax.annotate('Open',
                 xy=(203, diff.max() * .85),
                 xytext = (0, 0),  # fontsize=10,
