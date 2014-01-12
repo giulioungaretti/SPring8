@@ -791,9 +791,6 @@ def color_ticks(fig, color_labeled_lines=True):
         if len(ax.lines) > 2:
             print 'check the result'
         for line in ax.lines:
-            print ax.get_ylim()
-            print line.get_label()
-            print '--'
             if '_line' not in line.get_label():
                     for i in ax.get_yticklabels():
                         i.set_color(line.get_color())
