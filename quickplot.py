@@ -168,9 +168,9 @@ def do_diff_derivatives(data, parameters_dict,
         d_tw = pd.rolling_mean(
             pd.rolling_median(data.Int_TW, median).diff(), mean)
         diff = d_wz - d_tw
-        line1, = ax.plot(xs_TW, d_tw, '.',  # c='#C02942',
-                         label=r'$I{\prime}_{WZ} ')
-        line1, = ax.plot(xs_TW, smooth(d_tw, 15), '-',
+        line1, = ax.plot(xs_TW, d_wz, '.',  # c='#C02942',
+                         label=r'$I{\prime}_{WZ}$')
+        line1, = ax.plot(xs_TW, smooth(d_wz, 15), '-',
                          #c='#C02942'
                          )
     if nig:
@@ -179,7 +179,7 @@ def do_diff_derivatives(data, parameters_dict,
         # to create nice legend
         line2, = ax2.plot(x[data_temp.NIG != 1],
                           data_temp.NIG[data_temp.NIG != 1],
-                          c='#EB6841', label='NIG')
+                          c='#72C086', label='NIG')
         ax2.yaxis.label.set_color(line2.get_color())  # color the label
         ax2.tick_params(axis='y', colors=line2.get_color())
         lines = [line1, line2]  # to create nice legend
@@ -209,11 +209,13 @@ def do_diff_derivatives(data, parameters_dict,
         #     on = on  - 10 + data.index.values.min()
         #     off = off -10 + data.index.values.min()
         #     ax.add_patch(Rectangle((on, -1), off - on, 2, facecolor="red",alpha=.5))
-    ax.set_ylim(-0.2, 1)
+    ax.set_ylim(d_wz.min(), d_wz.max())
     ax3.set_ylim(wz.min(), wz.max())
     ax.set_xlabel('Time(s)')
+    value_reference_for_label = d_wz
+    print value_reference_for_label.max()
     ax.annotate('Open',
-                xy=(203, diff.max() * .85),
+                xy=(203, value_reference_for_label.max() * .55),
                 xytext = (0, 0),  # fontsize=10,
                 weight= 'semibold', color='white',
                 horizontalalignment='center', rotation=45,
@@ -221,14 +223,14 @@ def do_diff_derivatives(data, parameters_dict,
                 textcoords = 'offset points')
     ax.annotate('''In
 shutter:''',
-                xy=(135, diff.max() * .71),
+                xy=(135, value_reference_for_label.max() * .45),
                 xytext = (0, 0),  # fontsize=10,
                 weight= 'semibold', color='black',
                 horizontalalignment='center',
                 bbox = dict(fc='k', alpha=.0),
                 textcoords = 'offset points')
     ax.annotate('Close',
-                xy=(175, diff.max() * .85),
+                xy=(175, value_reference_for_label.max() * .55),
                 xytext = (0, 0),  # fontsize=11,
                 weight= 'semibold', color= '#353535',
                 horizontalalignment='center', rotation=45,
@@ -238,4 +240,4 @@ shutter:''',
     return fig, ax
 
 def version():
-    return 'now'
+    return '2014-01-12'
