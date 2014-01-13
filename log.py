@@ -1,5 +1,3 @@
-
-
 class mbelog(object):
 
     def __init__(self, name):
@@ -31,7 +29,7 @@ class mbelog(object):
                         time_val = time.strptime(line[3:-1], format)
                         data_time.append(time.mktime(time_val))
                     if 'IR' in line:
-                        temp.append(float(line[5:]))
+                        temp.appned(float(line[5:]))
                     if '#P Kcells' in line:
                         temperatures =  line[11:-1].split(' ')
                         # cell_temp_As.append(temperatures[4])
