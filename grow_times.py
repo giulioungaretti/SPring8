@@ -6,4 +6,4 @@ for name in names:
     data, parameters_dict, on_off, offset_list = loadme(name)
     ax.plot(data.index[data.NIG != 1], data.NIG[data.NIG != 1])
     ax.set_title(name)
-    fig.show()
+    display(fig)

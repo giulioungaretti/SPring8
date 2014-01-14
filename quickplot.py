@@ -168,11 +168,11 @@ def do_diff_derivatives(data, parameters_dict,
         d_tw = pd.rolling_mean(
             pd.rolling_median(data.Int_TW, median).diff(), mean)
         diff = d_wz - d_tw
-        line1, = ax.plot(xs_TW, d_wz, '.',  # c='#C02942',
+        line1, = ax.plot(xs_TW, d_wz, 'o-',  # c='#C02942',
                          label=r'$I{\prime}_{WZ}$')
-        line1, = ax.plot(xs_TW, smooth(d_wz, 15), '-',
+        # line1, = ax.plot(xs_TW, smooth(d_wz, 15), '-',
                          #c='#C02942'
-                         )
+                         # )
     if nig:
         ax2 = ax.twinx()
         ax2.set_ylabel('Pressure (Pa)')
@@ -188,12 +188,12 @@ def do_diff_derivatives(data, parameters_dict,
     if sum_on:
         ax3 = ax.twinx()
         ax3.set_ylabel(' intensity (a.u)')
-        line2, = ax3.plot(xs_TW, smooth(wz, 15),
-                          '-',
-                          c='#ECD078')  # ,
+        # line2, = ax3.plot(xs_TW, smooth(wz, 15),
+                          # '-',
+                          # c='#ECD078')  # ,
         #                   label=r'$I_{WZ} + I_{%s}$' % (structure))
         line2, = ax3.plot(xs_TW, wz,
-                          '.',
+                          'o',
                           c='#D95B43', label=r'$I_{WZ}$')
         lines = [line1, line2]  # to create nice legend
         ax.legend(lines, [l.get_label()
