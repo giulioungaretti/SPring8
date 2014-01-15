@@ -122,8 +122,8 @@ def create_par_dict():
 def do_diff_derivatives(data, parameters_dict,
                         structure, name,
                         shutter=False, nig=True,
-                        sum_on=False, shade=True,
-                        numeric=False, **kwargs):
+                        raw_int_wz=True, shade=True,
+                        numeric=False,smooth_int_wz=False, **kwargs):
     '''
     Perform the difference of the derivatives I_WZ  and I[structure]
     of the spline fitted data with  the parameters specified
@@ -185,21 +185,20 @@ def do_diff_derivatives(data, parameters_dict,
         lines = [line1, line2]  # to create nice legend
         ax.legend(lines, [l.get_label()
                   for l in lines], loc=0)  # to create nice legend
-        A
-    if sum_on:
-        ax3 = ax.twinx()
-        ax3.set_ylabel(' intensity (a.u)')
-        # line2, = ax3.plot(xs_TW, smooth(wz, 15),
-                          # '-',
-                          # c='#ECD078')  # ,
-        #                   label=r'$I_{WZ} + I_{%s}$' % (structure))
-        if smooth_int:
-            line2, = ax3.plot(data.index, data.Int_WZ,
+       
+    ax3 = ax.twinx()
+    ax3.set_ylabel(' intensity (a.u)')
+    if smooth_int_wz:
+        line2, = ax3.plot(xs_TW,wz,
                             'o-',
-                            c='#D95B43', label=r'$I_{WZ}$')
-        lines = [line1, line2]  # to create nice legend
-        ax.legend(lines, [l.get_label()
-                          for l in lines], loc=3)  # to create nice legend
+                            c='#D95B43', label=r'$I_{WZ} smoothed$')
+    if raw_int_wz:
+        line2, = ax3.plot(data.index, data.Int_WZ,
+		    'o-',
+		    c='#D95B43', label=r'$I_{WZ} raw data $')
+    lines = [line1, line2]  # to create nice legend
+    ax.legend(lines, [l.get_label()
+                         for l in lines], loc=3)  # to create nice legend
     if shade:
         for on, off in zip(on_off[:-1:2], on_off[1::2]):
             on = on + data.index.values.min()
