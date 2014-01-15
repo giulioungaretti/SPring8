@@ -745,18 +745,22 @@ def load_spline_par(name):
         return None
 
 
-def shade(on_off, ax):
+def shade(on_off, ax, lim = None):
     '''
     shade the ax axsis object between on and off
     Takes the list of on-off values (!) and one
     axis object.
     '''
+    if lim != None:
+        limit= lim
+    if lim == None:
+        limit = ax.get_ylim()[1]
     for on, off in zip(on_off[:-1:2], on_off[1::2]):
             # on = on + data.index.values.min()
             # off = off + data.index.values.min()
         ax.add_patch(
             Rectangle((on, -1),
-                      off - on, ax.get_ylim()[1],
+                      off - on, limit ,
                       facecolor="grey", alpha=0.5))
 
 
@@ -776,7 +780,7 @@ def update_legend(fig, loc=0):
             else:
                 lines.append(line)
     ax.legend(lines, [l.get_label()
-                      for l in lines], loc=loc)  # to create nice legend
+                      for l in lines], loc=loc,frameon=False)  # to create nice legend
 
 
 def color_ticks(fig, color_labeled_lines=True):

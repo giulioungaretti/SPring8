@@ -4,7 +4,7 @@ name = 'InAs0799time3'
 data, parameters_dict, on_off, offset_list = loadme(name)
 fig, ax = do_diff_derivatives(
     data, parameters_dict, 'TW',
-    name, False, False, False, True, True,True)
+    name, False, False, True, True, True,False)
 
 fig.show()
 def aaa():

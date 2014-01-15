@@ -130,31 +130,25 @@ def do_diff_derivatives(data, parameters_dict,
     in the parameters_dict.
     '''
     fig, ax = subplots(**kwargs)
-
     on_off = save_suhtters(name)
-
     data_temp = data
-
     offset_list = [[5, 5] for i in range(len(on_off))]  # [[5,56],[10,56]]
+
 
     x = data.index
     y = data_temp.Int_WZ
     xs_WZ, ys_WZ, d_ys_WZ, dd_ys_WZ = spline_do(
         x, y, [ax], n=3, s=parameters_dict['WZ'], k=3, plot=False)
+    y_wz = array(y)
+
+    # start plotting
     if shutter:
         plot_shutters(on_off, data_temp, [ax],
                       offset=offset_list, ls='--', color='k')
-    y_wz = array(y)
-    # now to ZV
-    y = data_temp['Int_' + str(structure)]
-    xs_TW, ys_TW, d_ys_TW, dd_ys_TW = spline_do(
-        x, y, [ax], n=3,
-        s=parameters_dict[structure], k=3, plot=False)
-    diff = (norm(d_ys_WZ) - norm(d_ys_TW))  # / (d_ys_WZ + d_ys_TW )
-    summ_int = y_wz + array(y)
+
     # spline derivative
     if not numeric:
-        line1, = ax.plot(xs_TW, diff, c='#00A0B0',
+        line1, = ax.plot(xs_WZ, diff, c='#00A0B0',
                          label=r'$I{\prime}_{WZ} ' +
                          '- I{\prime}_{%s}$' % (structure))
     # numeric derivative
@@ -167,12 +161,10 @@ def do_diff_derivatives(data, parameters_dict,
             pd.rolling_median(data.Int_WZ, median).diff(), mean)
         d_tw = pd.rolling_mean(
             pd.rolling_median(data.Int_TW, median).diff(), mean)
-        diff = d_wz - d_tw
-        line1, = ax.plot(xs_TW, d_wz, 'o-',  # c='#C02942',
-                         label=r'$I{\prime}_{WZ}$')
-        # line1, = ax.plot(xs_TW, smooth(d_wz, 15), '-',
-                         #c='#C02942'
-                         # )
+        line1, = ax.plot(xs_WZ, d_wz, 'o-',   c='#D95B43',
+                         label=r'$I{\prime}_{WZ}, smooth 15 $')
+        line1, = ax.plot(xs_WZ, smooth(d_wz, 11), 'o--',
+                         c='#C02942', label=r'$I{\prime}_{WZ}$')
     if nig:
         ax2 = ax.twinx()
         ax2.set_ylabel('Pressure (Pa)')
@@ -185,17 +177,17 @@ def do_diff_derivatives(data, parameters_dict,
         lines = [line1, line2]  # to create nice legend
         ax.legend(lines, [l.get_label()
                   for l in lines], loc=0)  # to create nice legend
-       
+
     ax3 = ax.twinx()
     ax3.set_ylabel(' intensity (a.u)')
     if smooth_int_wz:
-        line2, = ax3.plot(xs_TW,wz,
+        line2, = ax3.plot(xs_WZ, smooth(data.Int_WZ, 15),
                             'o-',
-                            c='#D95B43', label=r'$I_{WZ} smoothed$')
+                            c='#9FE5F2', label=r'$I_{WZ} $')
     if raw_int_wz:
         line2, = ax3.plot(data.index, data.Int_WZ,
 		    'o-',
-		    c='#D95B43', label=r'$I_{WZ} raw data $')
+		    c='#0095B1', label=r'$I_{WZ} $')
     lines = [line1, line2]  # to create nice legend
     ax.legend(lines, [l.get_label()
                          for l in lines], loc=3)  # to create nice legend
@@ -217,23 +209,23 @@ def do_diff_derivatives(data, parameters_dict,
     print value_reference_for_label.max()
     ax.annotate('Open',
                 xy=(203, value_reference_for_label.max() * .55),
-                xytext = (0, 0),  # fontsize=10,
-                weight= 'semibold', color='white',
+                xytext = (0, 0),  fontsize=20,
+                color='white',
                 horizontalalignment='center', rotation=45,
                 bbox = dict(fc='k', alpha=.0),
                 textcoords = 'offset points')
     ax.annotate('''In
 shutter:''',
-                xy=(135, value_reference_for_label.max() * .45),
-                xytext = (0, 0),  # fontsize=10,
-                weight= 'semibold', color='black',
+                xy=(135, value_reference_for_label.max() * .54),
+                xytext = (0, 0),   fontsize=20,
+                color='black',
                 horizontalalignment='center',
                 bbox = dict(fc='k', alpha=.0),
                 textcoords = 'offset points')
     ax.annotate('Close',
                 xy=(175, value_reference_for_label.max() * .55),
-                xytext = (0, 0),  # fontsize=11,
-                weight= 'semibold', color= '#353535',
+                xytext = (0, 0),   fontsize=20,
+                color= '#353535',
                 horizontalalignment='center', rotation=45,
                 bbox = dict(fc='k', alpha=.0),
                 textcoords = 'offset points')
