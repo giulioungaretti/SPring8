@@ -5,10 +5,12 @@ data, parameters_dict, on_off, offset_list = loadme(name)
 fig, ax = do_diff_derivatives(
     data, parameters_dict, 'TW',
     name, False, True, True, True, True)
-fig, ax  = plt.subplots()
-ax.plot(data.index, data.Int_WZ,'o' )
-ax2 = ax.twinx()
-ax2.plot(data.index[data.NIG !=1],data.NIG[data.NIG !=1])
-shade(on_off, ax)
 
-fig.show()
+
+def aaa():
+    fig, ax = plt.subplots()
+    ax.plot(data.index, data.Int_WZ, 'o')
+    ax2 = ax.twinx()
+    ax2.plot(data.index[data.NIG != 1], data.NIG[data.NIG != 1])
+    shade(on_off, ax)
+    return fig

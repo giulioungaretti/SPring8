@@ -185,6 +185,7 @@ def do_diff_derivatives(data, parameters_dict,
         lines = [line1, line2]  # to create nice legend
         ax.legend(lines, [l.get_label()
                   for l in lines], loc=0)  # to create nice legend
+        A
     if sum_on:
         ax3 = ax.twinx()
         ax3.set_ylabel(' intensity (a.u)')
@@ -192,9 +193,10 @@ def do_diff_derivatives(data, parameters_dict,
                           # '-',
                           # c='#ECD078')  # ,
         #                   label=r'$I_{WZ} + I_{%s}$' % (structure))
-        line2, = ax3.plot(xs_TW, wz,
-                          'o',
-                          c='#D95B43', label=r'$I_{WZ}$')
+        if smooth_int:
+            line2, = ax3.plot(data.index, data.Int_WZ,
+                            'o-',
+                            c='#D95B43', label=r'$I_{WZ}$')
         lines = [line1, line2]  # to create nice legend
         ax.legend(lines, [l.get_label()
                           for l in lines], loc=3)  # to create nice legend
