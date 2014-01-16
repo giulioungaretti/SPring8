@@ -14,6 +14,7 @@ from scipy.ndimage import center_of_mass
 from scipy.ndimage import median_filter
 from scipy.signal import medfilt
 from scipy.optimize import curve_fit
+from scipy.ndimage.measurements import center_of_mass
 from matplotlib.patches import Rectangle
 from matplotlib.pyplot import ion, ioff, close, imshow, cm
 from IPython.display import display
@@ -194,6 +195,7 @@ class SPring8_image(object):
         # an integreated intensity
         self.max_pos_x = max_int_pos[1][0]
         self.max_pos_y = max_int_pos[0][0]
+        self.COM = ndimage.measurements.center_of_mass(img_roi)
         self.int_intensity = np.sum(self.img_roi)
         if fit:
             img_crop_x = self.img_roi[self.max_pos_x]
@@ -240,6 +242,7 @@ class SPring8_image(object):
             display(fig_det)
         self.FWHM_y = poptx[2] * 2.355
         self.FWHM_x = popty[2] * 2.355
+        
         try:
             close('all')
             ion()
@@ -602,7 +605,8 @@ def pandify(samples, roi, name_file, save=True):
                              'FWHM_x_WZ', 'FWHM_x_ZB', 'FWHM_x_TW',
                              'FWHM_y_WZ', 'FWHM_y_ZB', 'FWHM_y_TW',
                              'max_pos_x_WZ', 'max_pos_x_ZB', 'max_pos_x_TW',
-                             'max_pos_y_WZ', 'max_pos_y_ZB', 'max_pos_y_TW', 'name'
+                             'max_pos_y_WZ', 'max_pos_y_ZB', 'max_pos_y_TW', 
+                             'name', 'COM'
                              ])
     Int_WZ = []
     Int_ZB = []
@@ -620,7 +624,7 @@ def pandify(samples, roi, name_file, save=True):
     max_pos_y_ZB = []
     max_pos_y_TW = []
     name = []
-
+    COM = []
     for i in roi.keys():
         if i == 'ZB':
             for i in samples[i]:
@@ -633,6 +637,7 @@ def pandify(samples, roi, name_file, save=True):
                     FWHM_y_ZB.append(NaN)
                 max_pos_x_ZB.append(i.max_pos_x)
                 max_pos_y_ZB.append(i.max_pos_y)
+                COM.append(i.COM)
         if i == 'TW':
             for i in samples[i]:
                 Int_TW.append(i.int_intensity / i.monitor)
@@ -644,6 +649,7 @@ def pandify(samples, roi, name_file, save=True):
                     FWHM_y_TW.append(NaN)
                 max_pos_x_TW.append(i.max_pos_x)
                 max_pos_y_TW.append(i.max_pos_y)
+                COM.append(i.COM)
         if i == 'WZ':
             for i in samples[i]:
                 Int_WZ.append(i.int_intensity / i.monitor)
@@ -655,6 +661,8 @@ def pandify(samples, roi, name_file, save=True):
                     FWHM_y_WZ.append(NaN)
                 max_pos_x_WZ.append(i.max_pos_x)
                 max_pos_y_WZ.append(i.max_pos_y)
+                COM.append(i.COM)
+                # add name of file to the data
                 name.append(str(i.file_name))
 
     data.Int_ZB = Int_ZB
@@ -674,7 +682,7 @@ def pandify(samples, roi, name_file, save=True):
     data.FWHM_y_WZ = FWHM_y_WZ
     data.max_pos_x_WZ = max_pos_x_WZ
     data.max_pos_y_WZ = max_pos_y_WZ
-
+    data.COM = COM
     data.NIG = NIG
     data.name = name
 
@@ -745,7 +753,7 @@ def load_spline_par(name):
         return None
 
 
-def shade(on_off, ax, lim = None):
+def shade(on_off, ax, data=None, lim = None):
     '''
     shade the ax axsis object between on and off
     Takes the list of on-off values (!) and one
@@ -756,8 +764,9 @@ def shade(on_off, ax, lim = None):
     if lim == None:
         limit = ax.get_ylim()[1]
     for on, off in zip(on_off[:-1:2], on_off[1::2]):
-            # on = on + data.index.values.min()
-            # off = off + data.index.values.min()
+        if data:
+            on = on + data.index.values.min()
+            off = off + data.index.values.min()
         ax.add_patch(
             Rectangle((on, -1),
                       off - on, limit ,
@@ -807,4 +816,4 @@ def color_ticks(fig, color_labeled_lines=True):
 
 
 def Version():
-    return 'last update Date: Date: 7-1-2014'
+    return 'last update 2014 - 01 - 16 take 2 '
