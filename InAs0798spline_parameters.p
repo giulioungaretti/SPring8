@@ -1,0 +1,11 @@
+(dp1
+S'TW'
+p2
+I3500
+sS'WZ'
+p3
+I3
+sS'ZB'
+p4
+I2000
+s.
