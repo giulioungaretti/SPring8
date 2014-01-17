@@ -854,15 +854,15 @@ def make_patch_spines_invisible(ax):
         sp.set_visible(False)
 
 
-def offset_axis(ax, value=1.2):
+def offset_axis(ax, value=1.2,orientation="right"):
     '''
     offset secondary y axis spine by value
     ---
     value is in axes coordinate 1 = max x, >1 outisde the graph
     '''
-    ax.spines["right"].set_position(("axes", value))
+    ax.spines[orientation].set_position(("axes", value))
     make_patch_spines_invisible(ax)
-    ax.spines["right"].set_visible(True)
+    ax.spines[orientation].set_visible(True)
 
 
 def savitzky_golay(y, window_size, order, deriv=0, rate=1):
@@ -1198,7 +1198,7 @@ def smooth_deriv(values,window=15,poly_degree = 3):
     '''
     temp_array = np.diff(values)
     d_sav = savitzky_golay(temp_array, window, poly_degree)
-    y = np.insert(d_sav,0, nan)
+    y = np.insert(d_sav,0, np.nan)
     return y
 
 
