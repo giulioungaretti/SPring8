@@ -844,6 +844,17 @@ def color_ticks(fig, color_labeled_lines=True):
             #             i.set_color(line.get_color())
 
 
+def make_spine_invisible(ax, direction):
+    if direction in ["right", "left"]:
+        ax.yaxis.set_ticks_position(direction)
+        ax.yaxis.set_label_position(direction)
+    elif direction in ["top", "bottom"]:
+        ax.xaxis.set_ticks_position(direction)
+        ax.xaxis.set_label_position(direction)
+    else:
+        raise ValueError("Unknown Direction : %s" % (direction,))
+
+
 def make_patch_spines_invisible(ax):
     '''
     makes the patch spine invisible for given ax
