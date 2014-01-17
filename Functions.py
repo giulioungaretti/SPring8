@@ -65,7 +65,7 @@ class SPring8_image(object):
         if name == 2:
             self.img = np.fromstring(
                 image, dtype=user_dtype).reshape(res[1], res[0])
-        self.img = median_filter(self.img, 5)  # perform median filter 3x3
+        #self.img = median_filter(self.img, 11)  # perform median filter 5x5
         header = header_file.split('\n')
         try:
             for i in range(len(header)):
@@ -805,7 +805,7 @@ def update_legend(fig, loc=0, frameon=True):
     'center right'    7
     'lower center'    8
     'upper center'    9
-    'center'          10
+    'center'         1 0
     == == == == == == == = == == == == == == =
     '''
     lines = []
@@ -831,7 +831,11 @@ def color_ticks(fig, color_labeled_lines=True):
     '''
     for ax in fig.get_axes():
         if len(ax.lines) > 2:
-            print 'check the result'
+            print '''
+coloring ticks...
+too much lines in one axis check the result
+coloring with last line drawn
+ '''
         for line in ax.lines:
             if '_line' not in line.get_label():
                 for i in ax.get_yticklabels():
@@ -865,7 +869,7 @@ def make_patch_spines_invisible(ax):
         sp.set_visible(False)
 
 
-def offset_axis(ax, value=1.2,orientation="right"):
+def offset_axis(ax, value=1.2, orientation="right"):
     '''
     offset secondary y axis spine by value
     ---
@@ -950,27 +954,28 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     return np.convolve(m[::-1], y, mode='valid')
 
 
-def savitzky_golay_piecewise(xvals, data, kernel=11, order =4):
-    turnpoint=0
-    last=len(xvals)
-    if xvals[1]>xvals[0] : #x is increasing?
-        for i in range(1,last) : #yes
-            if xvals[i]<xvals[i-1] : #search where x starts to fall
-                turnpoint=i
+def savitzky_golay_piecewise(xvals, data, kernel=11, order=4):
+    turnpoint = 0
+    last = len(xvals)
+    if xvals[1] > xvals[0]:  # x is increasing?
+        for i in range(1, last):  # yes
+            if xvals[i] < xvals[i - 1]:  # search where x starts to fall
+                turnpoint = i
                 break
-    else: #no, x is decreasing
-        for i in range(1,last) : #search where it starts to rise
-            if xvals[i]>xvals[i-1] :
-                turnpoint=i
+    else:  # no, x is decreasing
+        for i in range(1, last):  # search where it starts to rise
+            if xvals[i] > xvals[i - 1]:
+                turnpoint = i
                 break
-    if turnpoint==0 : #no change in direction of x
+    if turnpoint == 0:  # no change in direction of x
         return savitzky_golay(data, kernel, order)
     else:
-        #smooth the first piece
-        firstpart=savitzky_golay(data[0:turnpoint],kernel,order)
-        #recursively smooth the rest
-        rest=savitzky_golay_piecewise(xvals[turnpoint:], data[turnpoint:], kernel, order)
-        return numpy.concatenate((firstpart,rest))
+        # smooth the first piece
+        firstpart = savitzky_golay(data[0:turnpoint], kernel, order)
+        # recursively smooth the rest
+        rest = savitzky_golay_piecewise(
+            xvals[turnpoint:], data[turnpoint:], kernel, order)
+        return numpy.concatenate((firstpart, rest))
 
 
 def loadme(name):
@@ -1183,7 +1188,7 @@ def do_diff_derivatives(data, parameters_dict,
                 bbox = dict(fc='k', alpha=.0),
                 textcoords = 'offset points')
     ax.annotate('''In
-					shutter:''',
+                    shutter:''',
                 xy=(135, value_reference_for_label.max() * .54),
                 xytext = (0, 0),   fontsize=20,
                 color='black',
@@ -1201,29 +1206,29 @@ def do_diff_derivatives(data, parameters_dict,
     return fig, ax
 
 
-def smooth_deriv(values,window=15,poly_degree = 3):
+def smooth_deriv(values, window=15, poly_degree=3):
     '''
-    calculate the first derivative of the value array 
-    and smooth it with SG alghoritm with default windows 
+    calculate the first derivative of the value array
+    and smooth it with SG alghoritm with default windows
     of 15 points and poly degree of 3
     '''
     temp_array = np.diff(values)
     d_sav = savitzky_golay(temp_array, window, poly_degree)
-    y = np.insert(d_sav,0, np.nan)
+    y = np.insert(d_sav, 0, np.nan)
     return y
 
 
 def css_styling():
-	'''
-	stylish notebook
-	'''
-	try:
-		from IPython.core.display import HTML
-		styles = open("styles/custom.css", "r").read()
-		return HTML(styles)
-	except:
-		print 'what are you tring to do ???'
+    '''
+    stylish notebook
+    '''
+    try:
+        from IPython.core.display import HTML
+        styles = open("styles/custom.css", "r").read()
+        return HTML(styles)
+    except:
+        print 'what are you tring to do ???'
 
 
 def Version():
-    return 'date 2014-01-17 tale II '
+    return 'date 2014-01-17 tale III no filter '
