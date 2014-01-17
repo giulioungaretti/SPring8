@@ -1,7 +1,7 @@
 # imports
 
 import cPickle as pickle
-from numpy import linspace, exp, uint16, uint32
+from numpy import linspace, uint16, uint32
 from numpy import where, NaN
 from numpy.random import randint
 import matplotlib.pyplot as plt
@@ -9,7 +9,6 @@ from scipy.interpolate import UnivariateSpline
 import numpy as np
 import pandas as pd
 from scipy.ndimage import median_filter
-from scipy.signal import medfilt
 from scipy.optimize import curve_fit
 from scipy.ndimage.measurements import center_of_mass
 from matplotlib.patches import Rectangle
@@ -192,7 +191,8 @@ class SPring8_image(object):
         # an integreated intensity
         self.max_pos_x = max_int_pos[1][0]
         self.max_pos_y = max_int_pos[0][0]
-        self.COM = center_of_mass(self.img_roi) # tuple (x coordinate, y coordinate)
+        # tuple (x coordinate, y coordinate)
+        self.COM = center_of_mass(self.img_roi)
         self.int_intensity = np.sum(self.img_roi)
         if fit:
             img_crop_x = self.img_roi[self.max_pos_x]
@@ -834,8 +834,8 @@ def color_ticks(fig, color_labeled_lines=True):
             print 'check the result'
         for line in ax.lines:
             if '_line' not in line.get_label():
-                    for i in ax.get_yticklabels():
-                        i.set_color(line.get_color())
+                for i in ax.get_yticklabels():
+                    i.set_color(line.get_color())
             else:
                 continue
             # else:
@@ -854,7 +854,7 @@ def make_patch_spines_invisible(ax):
         sp.set_visible(False)
 
 
-def offset_axis(ax,value=1.2):
+def offset_axis(ax, value=1.2):
     '''
     offset secondary y axis spine by value
     ---
@@ -863,6 +863,7 @@ def offset_axis(ax,value=1.2):
     ax.spines["right"].set_position(("axes", value))
     make_patch_spines_invisible(ax)
     ax.spines["right"].set_visible(True)
+
 
 def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     r"""Smooth (and optionally differentiate) data with a Savitzky-Golay filter.
@@ -924,17 +925,42 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
         raise TypeError("window_size size must be a positive odd number")
     if window_size < order + 2:
         raise TypeError("window_size is too small for the polynomials order")
-    order_range = range(order+1)
-    half_window = (window_size -1) // 2
+    order_range = range(order + 1)
+    half_window = (window_size - 1) // 2
     # precompute coefficients
-    b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])
-    m = np.linalg.pinv(b).A[deriv] * rate**deriv * factorial(deriv)
+    b = np.mat([[k ** i for i in order_range]
+               for k in range(-half_window, half_window + 1)])
+    m = np.linalg.pinv(b).A[deriv] * rate ** deriv * factorial(deriv)
     # pad the signal at the extremes with
     # values taken from the signal itself
-    firstvals = y[0] - np.abs( y[1:half_window+1][::-1] - y[0] )
-    lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
+    firstvals = y[0] - np.abs(y[1:half_window + 1][::-1] - y[0])
+    lastvals = y[-1] + np.abs(y[-half_window - 1:-1][::-1] - y[-1])
     y = np.concatenate((firstvals, y, lastvals))
-    return np.convolve( m[::-1], y, mode='valid')
+    return np.convolve(m[::-1], y, mode='valid')
+
+
+def savitzky_golay_piecewise(xvals, data, kernel=11, order =4):
+    turnpoint=0
+    last=len(xvals)
+    if xvals[1]>xvals[0] : #x is increasing?
+        for i in range(1,last) : #yes
+            if xvals[i]<xvals[i-1] : #search where x starts to fall
+                turnpoint=i
+                break
+    else: #no, x is decreasing
+        for i in range(1,last) : #search where it starts to rise
+            if xvals[i]>xvals[i-1] :
+                turnpoint=i
+                break
+    if turnpoint==0 : #no change in direction of x
+        return savitzky_golay(data, kernel, order)
+    else:
+        #smooth the first piece
+        firstpart=savitzky_golay(data[0:turnpoint],kernel,order)
+        #recursively smooth the rest
+        rest=savitzky_golay_piecewise(xvals[turnpoint:], data[turnpoint:], kernel, order)
+        return numpy.concatenate((firstpart,rest))
+
 
 def loadme(name):
     '''
@@ -971,7 +997,7 @@ def do(data, structure, parameters_dict, name, res=False):
     structure : string to select WZ,ZB,TW
     parameters_dict: the parameters of the spline
     '''
-    fig, ax = subplots(3, 1, figsize=(30, 20), sharex=True)
+    fig, ax = plt.subplots(3, 1, figsize=(30, 20), sharex=True)
 
     on_off = save_suhtters(name)
 
@@ -1054,7 +1080,8 @@ def do_diff_derivatives(data, parameters_dict,
                         structure, name,
                         shutter=False, nig=True,
                         raw_int_wz=True, shade=True,
-                        numeric=False,smooth_int_wz=False, **kwargs):
+                        numeric=False, smooth_int_wz=False,
+                        **kwargs):
     '''
     Perform the difference of the derivatives I_WZ  and I[structure]
     of the spline fitted data with  the parameters specified
@@ -1064,7 +1091,6 @@ def do_diff_derivatives(data, parameters_dict,
     on_off = save_suhtters(name)
     data_temp = data
     offset_list = [[5, 5] for i in range(len(on_off))]  # [[5,56],[10,56]]
-
 
     x = data.index
     y = data_temp.Int_WZ
@@ -1113,15 +1139,15 @@ def do_diff_derivatives(data, parameters_dict,
     ax3.set_ylabel(' intensity (a.u)')
     if smooth_int_wz:
         line2, = ax3.plot(xs_WZ, smooth(data.Int_WZ, 15),
-                            'o-',
-                            c='#9FE5F2', label=r'$I_{WZ} $')
+                          'o-',
+                          c='#9FE5F2', label=r'$I_{WZ} $')
     if raw_int_wz:
         line2, = ax3.plot(data.index, data.Int_WZ,
-		    'o-',
-		    c='#0095B1', label=r'$I_{WZ} $')
+                          'o-',
+                          c='#0095B1', label=r'$I_{WZ} $')
     lines = [line1, line2]  # to create nice legend
     ax.legend(lines, [l.get_label()
-                         for l in lines], loc=3)  # to create nice legend
+                      for l in lines], loc=3)  # to create nice legend
     if shade:
         for on, off in zip(on_off[:-1:2], on_off[1::2]):
             on = on + data.index.values.min()
@@ -1146,7 +1172,7 @@ def do_diff_derivatives(data, parameters_dict,
                 bbox = dict(fc='k', alpha=.0),
                 textcoords = 'offset points')
     ax.annotate('''In
-shutter:''',
+					shutter:''',
                 xy=(135, value_reference_for_label.max() * .54),
                 xytext = (0, 0),   fontsize=20,
                 color='black',
@@ -1164,5 +1190,19 @@ shutter:''',
     return fig, ax
 
 
+
+
+def css_styling():
+	'''
+	stylish notebook
+	'''
+	try:
+		from IPython.core.display import HTML
+		styles = open("styles/custom.css", "r").read()
+		return HTML(styles)
+	except:
+		print 'what are you tring to do ???'
+
+
 def Version():
-    return 'last update 2014 - 01 - 16 take 2 '
+    return 'date 2014-01-17 tale II '
