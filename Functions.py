@@ -1190,6 +1190,16 @@ def do_diff_derivatives(data, parameters_dict,
     return fig, ax
 
 
+def smooth_deriv(values,window=15,poly_degree = 3):
+    '''
+    calculate the first derivative of the value array 
+    and smooth it with SG alghoritm with default windows 
+    of 15 points and poly degree of 3
+    '''
+    temp_array = np.diff(values)
+    d_sav = savitzky_golay(temp_array, window, poly_degree)
+    y = np.insert(d_sav,0, nan)
+    return y
 
 
 def css_styling():
