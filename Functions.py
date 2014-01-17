@@ -7,10 +7,7 @@ from numpy.random import randint
 import matplotlib.pyplot as plt
 from scipy.interpolate import UnivariateSpline
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
-from scipy.ndimage import measurements as meas
-from scipy.ndimage import center_of_mass
 from scipy.ndimage import median_filter
 from scipy.signal import medfilt
 from scipy.optimize import curve_fit
@@ -69,7 +66,7 @@ class SPring8_image(object):
         if name == 2:
             self.img = np.fromstring(
                 image, dtype=user_dtype).reshape(res[1], res[0])
-        self.img = median_filter(self.img, 3)  # perform median filter 3x3
+        self.img = median_filter(self.img, 5)  # perform median filter 3x3
         header = header_file.split('\n')
         try:
             for i in range(len(header)):
@@ -195,13 +192,13 @@ class SPring8_image(object):
         # an integreated intensity
         self.max_pos_x = max_int_pos[1][0]
         self.max_pos_y = max_int_pos[0][0]
-        self.COM = ndimage.measurements.center_of_mass(img_roi)
+        self.COM = center_of_mass(self.img_roi) # tuple (x coordinate, y coordinate)
         self.int_intensity = np.sum(self.img_roi)
         if fit:
             img_crop_x = self.img_roi[self.max_pos_x]
             img_crop_y = self.img_roi[:, self.max_pos_x].flatten()
-            xx = linspace(y_1, y_2, len(img_crop_x))
-            xy = linspace(x_1, x_2, len(img_crop_y))
+            xx = np.linspace(y_1, y_2, len(img_crop_x))
+            xy = np.linspace(x_1, x_2, len(img_crop_y))
 
         if plot_me:
             fig_update, ax_update = plt.subplots()
@@ -242,7 +239,7 @@ class SPring8_image(object):
             display(fig_det)
         self.FWHM_y = poptx[2] * 2.355
         self.FWHM_x = popty[2] * 2.355
-        
+
         try:
             close('all')
             ion()
@@ -558,14 +555,14 @@ def spline_do(x, y, ax, k=3, s=7, n=1, diff=True, plot=True, error=False):
     '''
     # xs = np.array(x).astype(float)
     s = UnivariateSpline(x, y, k=k, s=s)
-    xs = linspace(x.values.min(), x.values.max(), len(x))
+    xs = np.linspace(x.values.min(), x.values.max(), len(x))
     ys = s(xs)
     if plot:
         if not error:
             ax.plot(x, norm(y), '.', label='Data')
         ax.plot(xs, norm(ys), label='Spline fit')
         if error:
-            ax.errorbar(x, norm(y), yerr=sqrt(norm(y)))
+            ax.errorbar(x, norm(y), yerr=np.sqrt(norm(y)))
 
     d_ys = np.gradient(ys)
     dd_ys = np.gradient(d_ys)
@@ -605,9 +602,11 @@ def pandify(samples, roi, name_file, save=True):
                              'FWHM_x_WZ', 'FWHM_x_ZB', 'FWHM_x_TW',
                              'FWHM_y_WZ', 'FWHM_y_ZB', 'FWHM_y_TW',
                              'max_pos_x_WZ', 'max_pos_x_ZB', 'max_pos_x_TW',
-                             'max_pos_y_WZ', 'max_pos_y_ZB', 'max_pos_y_TW', 
-                             'name', 'COM'
-                             ])
+                             'max_pos_y_WZ', 'max_pos_y_ZB', 'max_pos_y_TW',
+                             'name',
+                             'COM_x_WZ', 'COM_x_ZB', 'COM_x_TW',
+                             'COM_y_WZ', 'COM_y_ZB', 'COM_y_TW'])
+
     Int_WZ = []
     Int_ZB = []
     Int_TW = []
@@ -624,8 +623,15 @@ def pandify(samples, roi, name_file, save=True):
     max_pos_y_ZB = []
     max_pos_y_TW = []
     name = []
-    COM = []
+    COM_x_WZ = []
+    COM_x_ZB = []
+    COM_x_TW = []
+    COM_y_WZ = []
+    COM_y_ZB = []
+    COM_y_TW = []
+
     for i in roi.keys():
+
         if i == 'ZB':
             for i in samples[i]:
                 Int_ZB.append(i.int_intensity / i.monitor)
@@ -636,8 +642,9 @@ def pandify(samples, roi, name_file, save=True):
                     FWHM_x_ZB.append(NaN)
                     FWHM_y_ZB.append(NaN)
                 max_pos_x_ZB.append(i.max_pos_x)
+                COM_x_ZB.append(i.COM[0])
                 max_pos_y_ZB.append(i.max_pos_y)
-                COM.append(i.COM)
+                COM_y_ZB.append(i.COM[1])
         if i == 'TW':
             for i in samples[i]:
                 Int_TW.append(i.int_intensity / i.monitor)
@@ -648,8 +655,10 @@ def pandify(samples, roi, name_file, save=True):
                     FWHM_x_TW.append(NaN)
                     FWHM_y_TW.append(NaN)
                 max_pos_x_TW.append(i.max_pos_x)
+                COM_x_TW.append(i.COM[0])
                 max_pos_y_TW.append(i.max_pos_y)
-                COM.append(i.COM)
+                COM_y_TW.append(i.COM[1])
+
         if i == 'WZ':
             for i in samples[i]:
                 Int_WZ.append(i.int_intensity / i.monitor)
@@ -660,29 +669,34 @@ def pandify(samples, roi, name_file, save=True):
                     FWHM_x_WZ.append(NaN)
                     FWHM_y_WZ.append(NaN)
                 max_pos_x_WZ.append(i.max_pos_x)
+                COM_x_WZ.append(i.COM[0])
                 max_pos_y_WZ.append(i.max_pos_y)
-                COM.append(i.COM)
+                COM_y_WZ.append(i.COM[1])
                 # add name of file to the data
                 name.append(str(i.file_name))
 
     data.Int_ZB = Int_ZB
     data.FWHM_x_ZB = FWHM_x_ZB
+    data.COM_x_ZB = COM_x_ZB
     data.FWHM_y_ZB = FWHM_y_ZB
+    data.COM_y_ZB = COM_y_ZB
     data.max_pos_x_ZB = max_pos_x_ZB
     data.max_pos_y_ZB = max_pos_y_ZB
-
     data.Int_TW = Int_TW
     data.FWHM_x_TW = FWHM_x_TW
+    data.COM_x_TW = COM_x_TW
     data.FWHM_y_TW = FWHM_y_TW
+    data.COM_y_TW = COM_y_TW
     data.max_pos_x_TW = max_pos_x_TW
     data.max_pos_y_TW = max_pos_y_TW
-
     data.Int_WZ = Int_WZ
     data.FWHM_x_WZ = FWHM_x_WZ
+    data.COM_x_WZ = COM_x_WZ
     data.FWHM_y_WZ = FWHM_y_WZ
+    data.COM_y_WZ = COM_y_WZ
     data.max_pos_x_WZ = max_pos_x_WZ
     data.max_pos_y_WZ = max_pos_y_WZ
-    data.COM = COM
+
     data.NIG = NIG
     data.name = name
 
@@ -753,14 +767,14 @@ def load_spline_par(name):
         return None
 
 
-def shade(on_off, ax, data=None, lim = None):
+def shade(on_off, ax, data=None, lim=None):
     '''
     shade the ax axsis object between on and off
     Takes the list of on-off values (!) and one
     axis object.
     '''
     if lim != None:
-        limit= lim
+        limit = lim
     if lim == None:
         limit = ax.get_ylim()[1]
     for on, off in zip(on_off[:-1:2], on_off[1::2]):
@@ -769,15 +783,30 @@ def shade(on_off, ax, data=None, lim = None):
             off = off + data.index.values.min()
         ax.add_patch(
             Rectangle((on, -1),
-                      off - on, limit ,
+                      off - on, limit,
                       facecolor="grey", alpha=0.5))
 
 
-def update_legend(fig, loc=0):
+def update_legend(fig, loc=0, frameon=True):
     '''
     takes a figure as argument and updates
     the legend with the label of each line
     except ones without label.
+    == == == == == == == = == == == == == == =
+    Location String   Location Code
+    == == == == == == == = == == == == == == =
+    'best'            0
+    'upper right'     1
+    'upper left'      2
+    'lower left'      3
+    'lower right'     4
+    'right'           5
+    'center left'     6
+    'center right'    7
+    'lower center'    8
+    'upper center'    9
+    'center'          10
+    == == == == == == == = == == == == == == =
     '''
     lines = []
     for ax in fig.get_axes():
@@ -789,7 +818,7 @@ def update_legend(fig, loc=0):
             else:
                 lines.append(line)
     ax.legend(lines, [l.get_label()
-                      for l in lines], loc=loc,frameon=False)  # to create nice legend
+                      for l in lines], loc=loc, frameon=frameon)  # to create nice legend
 
 
 def color_ticks(fig, color_labeled_lines=True):
@@ -813,6 +842,326 @@ def color_ticks(fig, color_labeled_lines=True):
             #     if '_line' in line.get_label():
             #         for i in ax.get_yticklabels():
             #             i.set_color(line.get_color())
+
+
+def make_patch_spines_invisible(ax):
+    '''
+    makes the patch spine invisible for given ax
+    '''
+    ax.set_frame_on(True)
+    ax.patch.set_visible(False)
+    for sp in ax.spines.itervalues():
+        sp.set_visible(False)
+
+
+def offset_axis(ax,value=1.2):
+    '''
+    offset secondary y axis spine by value
+    ---
+    value is in axes coordinate 1 = max x, >1 outisde the graph
+    '''
+    ax.spines["right"].set_position(("axes", value))
+    make_patch_spines_invisible(ax)
+    ax.spines["right"].set_visible(True)
+
+def savitzky_golay(y, window_size, order, deriv=0, rate=1):
+    r"""Smooth (and optionally differentiate) data with a Savitzky-Golay filter.
+    The Savitzky-Golay filter removes high frequency noise from data.
+    It has the advantage of preserving the original shape and
+    features of the signal better than other types of filtering
+    approaches, such as moving averages techniques.
+    Parameters
+    ----------
+    y : array_like, shape (N,)
+        the values of the time history of the signal.
+    window_size : int
+        the length of the window. Must be an odd integer number.
+    order : int
+        the order of the polynomial used in the filtering.
+        Must be less then `window_size` - 1.
+    deriv: int
+        the order of the derivative to compute (default = 0 means only smoothing)
+    Returns
+    -------
+    ys : ndarray, shape (N)
+        the smoothed signal (or it's n-th derivative).
+    Notes
+    -----
+    The Savitzky-Golay is a type of low-pass filter, particularly
+    suited for smoothing noisy data. The main idea behind this
+    approach is to make for each point a least-square fit with a
+    polynomial of high order over a odd-sized window centered at
+    the point.
+    Examples
+    --------
+    t = np.linspace(-4, 4, 500)
+    y = np.exp( -t**2 ) + np.random.normal(0, 0.05, t.shape)
+    ysg = savitzky_golay(y, window_size=31, order=4)
+    import matplotlib.pyplot as plt
+    plt.plot(t, y, label='Noisy signal')
+    plt.plot(t, np.exp(-t**2), 'k', lw=1.5, label='Original signal')
+    plt.plot(t, ysg, 'r', label='Filtered signal')
+    plt.legend()
+    plt.show()
+    References
+    ----------
+    .. [1] A. Savitzky, M. J. E. Golay, Smoothing and Differentiation of
+       Data by Simplified Least Squares Procedures. Analytical
+       Chemistry, 1964, 36 (8), pp 1627-1639.
+    .. [2] Numerical Recipes 3rd Edition: The Art of Scientific Computing
+       W.H. Press, S.A. Teukolsky, W.T. Vetterling, B.P. Flannery
+       Cambridge University Press ISBN-13: 9780521880688
+    """
+    import numpy as np
+    from math import factorial
+
+    try:
+        window_size = np.abs(np.int(window_size))
+        order = np.abs(np.int(order))
+    except ValueError, msg:
+        raise ValueError("window_size and order have to be of type int")
+    if window_size % 2 != 1 or window_size < 1:
+        raise TypeError("window_size size must be a positive odd number")
+    if window_size < order + 2:
+        raise TypeError("window_size is too small for the polynomials order")
+    order_range = range(order+1)
+    half_window = (window_size -1) // 2
+    # precompute coefficients
+    b = np.mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])
+    m = np.linalg.pinv(b).A[deriv] * rate**deriv * factorial(deriv)
+    # pad the signal at the extremes with
+    # values taken from the signal itself
+    firstvals = y[0] - np.abs( y[1:half_window+1][::-1] - y[0] )
+    lastvals = y[-1] + np.abs(y[-half_window-1:-1][::-1] - y[-1])
+    y = np.concatenate((firstvals, y, lastvals))
+    return np.convolve( m[::-1], y, mode='valid')
+
+def loadme(name):
+    '''
+    arguments:
+    name = the name of the folder
+    -----
+    returns:
+    data, parameters_dict, on_off, offset_list
+    '''
+    try:
+        data = pd.read_csv(str(name) + 'data_frame.csv', index_col=0)
+        print 'data frame loaded'
+        parameters_dict = pickle.load(
+            open(str(name) + 'spline_parameters' + ".p", "rb"))
+        print 'parameters_dict loaded'
+        on_off = save_suhtters(name)
+        print 'on off loaded'
+        offset_list = [[5, 5] for i in range(len(on_off))]  # [[5,56],[10,56]]
+        print 'offset_list done'
+    except:
+        Exception
+        print'not found'
+        data = None
+        parameters_dict = None
+    return data, parameters_dict, on_off, offset_list
+
+
+def do(data, structure, parameters_dict, name, res=False):
+    '''
+    load data frame and plot shit.
+    -------
+    input:
+    data : the dataframe to be plotted
+    structure : string to select WZ,ZB,TW
+    parameters_dict: the parameters of the spline
+    '''
+    fig, ax = subplots(3, 1, figsize=(30, 20), sharex=True)
+
+    on_off = save_suhtters(name)
+
+    data_temp = data
+
+    offset_list = [[5, 5] for i in range(len(on_off))]  # [[5,56],[10,56]]
+
+    x = data.index
+    y = data_temp['Int_' + str(structure)]
+    xs, ys, d_ys, dd_ys = spline_do(
+        x, y, ax, n=3, s=parameters_dict[str(structure)], k=3, plot=False)
+
+    ax[0].plot(x, y, '.', label=y.name)
+    ax[0].plot(xs, ys, '-', label=y.name + 'Spline')
+    ax2 = ax[0].twinx()
+
+    ax2.plot(xs, d_ys, '--', label=y.name + '1st d erivative')
+    ax2.set_ylabel('Normalized intensity (a.u)')
+    ax2.legend()
+    plot_shutters(on_off, data_temp, ax,
+                  offset=offset_list, ls='--', color='k')
+
+    y = data_temp.NIG
+
+    ax[1].plot(x[data.NIG != 1], y[data.NIG != 1], label=y.name)
+
+    ax[1].set_ylabel('Ion Gauge Pressure (Pa)')
+    y = data_temp['FWHM_x_' + str(structure)]
+    ax[2].plot(x, y[data_temp.FWHM_x_WZ != 0], label=y.name)
+    y = data_temp['FWHM_y_' + str(structure)]
+    ax[2].plot(x, y[data_temp.FWHM_y_WZ != 0], label=y.name)
+    ax[2].set_ylabel('Normalized intensity (a.u)')
+    [j.legend(loc=0) for j in ax]
+    ax[2].set_xlabel('Time (s)')
+    return fig, ax
+
+
+def do_derivatives(data, parameters_dict, name, shutter=False):
+    fig, ax = subplots()
+    on_off = save_suhtters(name)
+    data_temp = data
+    offset_list = [[5, 5] for i in range(len(on_off))]  # [[5,56],[10,56]]
+
+    x = data.index
+    # WZ
+    y = data_temp.Int_WZ
+    xs, ys, d_ys, dd_ys = spline_do(
+        x, y, [ax], n=3, s=parameters_dict['WZ'], k=3, plot=False)
+
+    ax.plot(xs, norm(d_ys), '--', label=y.name + '1st d erivative')
+    ax.set_ylabel('Normalized intensity (a.u)')
+    ax.legend()
+    if shutter:
+        plot_shutters(on_off, data_temp, [ax],
+                      offset=offset_list, ls='--', color='k')
+    # now to ZV
+    y = data_temp.Int_TW
+    xs, ys, d_ys, dd_ys = spline_do(x, y,
+                                    [ax], n=3,
+                                    s=parameters_dict['TW'],
+                                    k=3, plot=False)
+    ax.plot(xs, norm(d_ys), '--', label=y.name + '1st d erivative')
+    ax.set_ylabel('Normalized intensity (a.u)')
+    ax.legend()
+
+    return fig, ax
+
+
+def create_par_dict():
+    parameters_dict = {}
+    structures = ['WZ', 'TW', 'ZB']
+    for i in structures:
+        value = raw_input('Insert spline value for %s: ' % (i))
+        parameters_dict[i] = float(value)
+    print 'done'
+    return parameters_dict
+
+
+def do_diff_derivatives(data, parameters_dict,
+                        structure, name,
+                        shutter=False, nig=True,
+                        raw_int_wz=True, shade=True,
+                        numeric=False,smooth_int_wz=False, **kwargs):
+    '''
+    Perform the difference of the derivatives I_WZ  and I[structure]
+    of the spline fitted data with  the parameters specified
+    in the parameters_dict.
+    '''
+    fig, ax = subplots(**kwargs)
+    on_off = save_suhtters(name)
+    data_temp = data
+    offset_list = [[5, 5] for i in range(len(on_off))]  # [[5,56],[10,56]]
+
+
+    x = data.index
+    y = data_temp.Int_WZ
+    xs_WZ, ys_WZ, d_ys_WZ, dd_ys_WZ = spline_do(
+        x, y, [ax], n=3, s=parameters_dict['WZ'], k=3, plot=False)
+    y_wz = array(y)
+
+    # start plotting
+    if shutter:
+        plot_shutters(on_off, data_temp, [ax],
+                      offset=offset_list, ls='--', color='k')
+
+    # spline derivative
+    if not numeric:
+        line1, = ax.plot(xs_WZ, diff, c='#00A0B0',
+                         label=r'$I{\prime}_{WZ} ' +
+                         '- I{\prime}_{%s}$' % (structure))
+    # numeric derivative
+    if numeric:
+        mean = 15
+        median = 1
+        wz = pd.rolling_mean(
+            pd.rolling_median(data.Int_WZ, median), mean)
+        d_wz = pd.rolling_mean(
+            pd.rolling_median(data.Int_WZ, median).diff(), mean)
+        d_tw = pd.rolling_mean(
+            pd.rolling_median(data.Int_TW, median).diff(), mean)
+        line1, = ax.plot(xs_WZ, d_wz, 'o-',   c='#D95B43',
+                         label=r'$I{\prime}_{WZ}, smooth 15 $')
+        line1, = ax.plot(xs_WZ, smooth(d_wz, 11), 'o--',
+                         c='#C02942', label=r'$I{\prime}_{WZ}$')
+    if nig:
+        ax2 = ax.twinx()
+        ax2.set_ylabel('Pressure (Pa)')
+        # to create nice legend
+        line2, = ax2.plot(x[data_temp.NIG != 1],
+                          data_temp.NIG[data_temp.NIG != 1],
+                          c='#72C086', label='NIG')
+        ax2.yaxis.label.set_color(line2.get_color())  # color the label
+        ax2.tick_params(axis='y', colors=line2.get_color())
+        lines = [line1, line2]  # to create nice legend
+        ax.legend(lines, [l.get_label()
+                  for l in lines], loc=0)  # to create nice legend
+
+    ax3 = ax.twinx()
+    ax3.set_ylabel(' intensity (a.u)')
+    if smooth_int_wz:
+        line2, = ax3.plot(xs_WZ, smooth(data.Int_WZ, 15),
+                            'o-',
+                            c='#9FE5F2', label=r'$I_{WZ} $')
+    if raw_int_wz:
+        line2, = ax3.plot(data.index, data.Int_WZ,
+		    'o-',
+		    c='#0095B1', label=r'$I_{WZ} $')
+    lines = [line1, line2]  # to create nice legend
+    ax.legend(lines, [l.get_label()
+                         for l in lines], loc=3)  # to create nice legend
+    if shade:
+        for on, off in zip(on_off[:-1:2], on_off[1::2]):
+            on = on + data.index.values.min()
+            off = off + data.index.values.min()
+            ax.add_patch(
+                Rectangle((on, -1), off - on, 2, facecolor="grey", alpha=.5))
+    # uncomment below to simulate a 10 sec delay, which is unrasonable
+        # for on, off in zip(on_off[:-1:2], on_off[1::2]):
+        #     on = on  - 10 + data.index.values.min()
+        #     off = off -10 + data.index.values.min()
+        #     ax.add_patch(Rectangle((on, -1), off - on, 2, facecolor="red",alpha=.5))
+    ax.set_ylim(d_wz.min(), d_wz.max())
+    ax3.set_ylim(wz.min(), wz.max())
+    ax.set_xlabel('Time(s)')
+    value_reference_for_label = d_wz
+    print value_reference_for_label.max()
+    ax.annotate('Open',
+                xy=(203, value_reference_for_label.max() * .55),
+                xytext = (0, 0),  fontsize=20,
+                color='white',
+                horizontalalignment='center', rotation=45,
+                bbox = dict(fc='k', alpha=.0),
+                textcoords = 'offset points')
+    ax.annotate('''In
+shutter:''',
+                xy=(135, value_reference_for_label.max() * .54),
+                xytext = (0, 0),   fontsize=20,
+                color='black',
+                horizontalalignment='center',
+                bbox = dict(fc='k', alpha=.0),
+                textcoords = 'offset points')
+    ax.annotate('Close',
+                xy=(175, value_reference_for_label.max() * .55),
+                xytext = (0, 0),   fontsize=20,
+                color= '#353535',
+                horizontalalignment='center', rotation=45,
+                bbox = dict(fc='k', alpha=.0),
+                textcoords = 'offset points')
+    ax.set_ylabel('Normalized intensity (a.u)')
+    return fig, ax
 
 
 def Version():
