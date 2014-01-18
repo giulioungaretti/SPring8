@@ -324,6 +324,7 @@ def norm(df, scale=1):
 
 def define_roi(files, name, cond=None, kind=2):
     '''
+    files MUST be string to the iamge name with paht!
     cond = 'yes' to delete roi
     '''
     # Check if dumped ROIs exist already:
@@ -332,30 +333,28 @@ def define_roi(files, name, cond=None, kind=2):
         print '- ROI dump found, using it !'
         if cond == 'yes':
             print 'creating new roi, overwriting old file, commit!!!'
+            roi = {}
             raise Exception
         else:
             print '- using loaded ROIs'
-        roi = pickle.load(open(str(name) + 'ROI' + ".p", "rb"))
     except:
         print '- no ROI found, define them'
     # Define New ROIs
         try:
             roi
-            print '- ROI exists, finishing'
+            print '- ROI object exists '
             if not roi:
                 print '- empty ROI dictionary'
                 raise NameError
         except NameError:
             print '- create new ROI'
-            roi = {}
         try:
             ZB
             print '-  ZB exists'
         except NameError:
             print '- create ZB'
             # first file  should only have ZB/twin
-            print files[0]
-            ZB = get_roi(files[0], kind, log=True)
+            ZB = get_roi(files, kind, log=True)
             roi['ZB'] = ZB
 
         try:
@@ -364,8 +363,7 @@ def define_roi(files, name, cond=None, kind=2):
         except NameError:
             print '- create TW'
             # random late file  should  have strong  ZB/twin
-            print files[50]
-            TW = get_roi(files[50], kind, log=True)
+            TW = get_roi(files, kind, log=True)
             roi['TW'] = TW
 
         try:
@@ -373,10 +371,7 @@ def define_roi(files, name, cond=None, kind=2):
             print '-  WZ exists'
         except NameError:
             print '- create wZ'
-            # any file in between the fist and the last should be good
-            name_file = files[randint(0, high=len(files))]
-            print name_file
-            WZ = get_roi(name_file, kind, log=True)
+            WZ = get_roi(files, kind, log=True)
             roi['WZ'] = WZ
 
         # Dump roi to disk
