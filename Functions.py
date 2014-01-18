@@ -324,14 +324,15 @@ def norm(df, scale=1):
 
 def define_roi(files, name, cond=None, kind=2):
     '''
-    cond = yes to delete roi
+    cond = 'yes' to delete roi
     '''
     # Check if dumped ROIs exist already:
     try:
         roi = pickle.load(open(str(name) + 'ROI' + ".p", "rb"))
         print '- ROI dump found, using it !'
         if cond == 'yes':
-            name = str(name) + ".p"
+            print 'creating new roi, overwriting old file, commit!!!'
+            raise Exception
         else:
             print '- using loaded ROIs'
         roi = pickle.load(open(str(name) + 'ROI' + ".p", "rb"))
@@ -343,7 +344,6 @@ def define_roi(files, name, cond=None, kind=2):
             print '- ROI exists, finishing'
             if not roi:
                 print '- empty ROI dictionary'
-
                 raise NameError
         except NameError:
             print '- create new ROI'

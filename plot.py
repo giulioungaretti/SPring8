@@ -15,8 +15,7 @@ def plot_fig():
     TW_Color_Data = "#F38630"
     # WZ
     ax.plot(data.index, data.Int_WZ, 'o', c=WZ_color_Data, label=r'$I_{WZ} $')
-    ax.set_xlim(100, 600)
-    ax.set_ylim(13, 16.5)
+
     shade(on_off, ax, lim=35)
     data['time'] = data.index
     high = on_off[0]
