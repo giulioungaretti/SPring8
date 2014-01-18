@@ -1214,7 +1214,7 @@ def smooth_deriv(values, window=15, poly_degree=3):
     '''
     temp_array = np.diff(values)
     d_sav = savitzky_golay(temp_array, window, poly_degree)
-    y = np.insert(d_sav, 0, np.nan)
+    y = np.insert(d_sav, 0, 0)
     return y
 
 
