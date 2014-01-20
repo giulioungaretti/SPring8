@@ -2,14 +2,14 @@
 S'TW'
 p2
 (lp3
-F300
+F340
 aF370
 aF60
 aF150
 asS'WZ'
 p4
 (lp5
-F200
+F210
 aF270
 aF60
 aF150
