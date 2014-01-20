@@ -586,7 +586,7 @@ def load_spec_log(name):
     spec_name = 'spec/{0}'.format(name)
     spec_log = pd.read_csv(spec_name, names=names, skiprows=0,
                            sep=' ', comment='#', skip_footer=2)  # skip last 3 lines
-    return spec_log
+    return spec_log.dropna()
 
 
 
