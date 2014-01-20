@@ -705,7 +705,7 @@ def pandify(samples, roi, name_file, save=True):
     data.max_pos_y_WZ = max_pos_y_WZ
     data.NIG = NIG
     data.name = name
-    data.monitor = monitor_value
+    data.Monitor = monitor_value
     data = data.sort_index()
     data.to_csv(str(name_file) + 'data_frame.csv')
     return data
