@@ -1,5 +1,4 @@
 # imports
-
 import cPickle as pickle
 from numpy import linspace, uint16, uint32
 from numpy import where, NaN
@@ -65,7 +64,7 @@ class SPring8_image(object):
         if name == 2:
             self.img = np.fromstring(
                 image, dtype=user_dtype).reshape(res[1], res[0])
-        #self.img = median_filter(self.img, 11)  # perform median filter 5x5
+        # self.img = median_filter(self.img, 11)  # perform median filter 5x5
         header = header_file.split('\n')
         try:
             for i in range(len(header)):
@@ -576,16 +575,36 @@ def load_data_frame(name):
         return None
 
 
-def pandify(samples, roi, name_file, save=True):
+def load_spec_log(name):
+    '''
+    Read the spec log file and return the log stored 
+    as a panda data frame.
+    Last line is skipped.
+    '''
+    names = 'Time Epoch  Seconds  F.M.  bg  pico1  roi0  roi1  roi2  Monitor  Detector'
+    names = names.replace('  ', ' ').split(' ')
+    spec_name = 'spec/{0}'.format(name)
+    spec_log = pd.read_csv(spec_name, names=names, skiprows=0,
+                           sep=' ', comment='#', skip_footer=2)  # skip last 3 lines
+    return spec_log
+
+
+
+
+def pandify(samples, log_data, roi, name_file, save=True):
     '''
     takes the result of the calculation and turns them into a sorted
     dataframe!
+    ----
+    samples is a dict coming from the parallel calculation
+    log_data is the data-frame contain the spec log 
     '''
     for a in samples.keys():
         time, NIG, = [], []
         for i in samples[a]:
             time.append(i.time)
             NIG.append(i.NIG)
+    Precise_time = log_data.Time
     data = pd.DataFrame(
         index=time, columns=['NIG', 'Int_WZ', 'Int_ZB', 'Int_TW',
                              'FWHM_x_WZ', 'FWHM_x_ZB', 'FWHM_x_TW',
@@ -594,7 +613,7 @@ def pandify(samples, roi, name_file, save=True):
                              'max_pos_y_WZ', 'max_pos_y_ZB', 'max_pos_y_TW',
                              'name',
                              'COM_x_WZ', 'COM_x_ZB', 'COM_x_TW',
-                             'COM_y_WZ', 'COM_y_ZB', 'COM_y_TW'])
+                             'COM_y_WZ', 'COM_y_ZB', 'COM_y_TW', 'Time'])
 
     Int_WZ = []
     Int_ZB = []
@@ -685,7 +704,7 @@ def pandify(samples, roi, name_file, save=True):
     data.COM_y_WZ = COM_y_WZ
     data.max_pos_x_WZ = max_pos_x_WZ
     data.max_pos_y_WZ = max_pos_y_WZ
-
+    data.Time = Precise_time
     data.NIG = NIG
     data.name = name
 
@@ -930,7 +949,7 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     if window_size < order + 2:
         raise TypeError("window_size is too small for the polynomials order")
     order_range = range(order + 1)
-    half_window = (window_size - 1) // 2 # symmetric window
+    half_window = (window_size - 1) // 2  # symmetric window
 
     # precompute coefficients
     b = np.mat([[k ** i for i in order_range]
