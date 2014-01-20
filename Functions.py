@@ -591,7 +591,7 @@ def load_spec_log(name):
 
 
 
-def pandify(samples, log_data, roi, name_file, save=True):
+def pandify(samples, roi, name_file, save=True):
     '''
     takes the result of the calculation and turns them into a sorted
     dataframe!
@@ -604,7 +604,6 @@ def pandify(samples, log_data, roi, name_file, save=True):
         for i in samples[a]:
             time.append(i.time)
             NIG.append(i.NIG)
-    Precise_time = log_data.Time
     data = pd.DataFrame(
         index=time, columns=['NIG', 'Int_WZ', 'Int_ZB', 'Int_TW',
                              'FWHM_x_WZ', 'FWHM_x_ZB', 'FWHM_x_TW',
@@ -613,7 +612,7 @@ def pandify(samples, log_data, roi, name_file, save=True):
                              'max_pos_y_WZ', 'max_pos_y_ZB', 'max_pos_y_TW',
                              'name',
                              'COM_x_WZ', 'COM_x_ZB', 'COM_x_TW',
-                             'COM_y_WZ', 'COM_y_ZB', 'COM_y_TW', 'Time'])
+                             'COM_y_WZ', 'COM_y_ZB', 'COM_y_TW'])
 
     Int_WZ = []
     Int_ZB = []
@@ -704,7 +703,6 @@ def pandify(samples, log_data, roi, name_file, save=True):
     data.COM_y_WZ = COM_y_WZ
     data.max_pos_x_WZ = max_pos_x_WZ
     data.max_pos_y_WZ = max_pos_y_WZ
-    data.Time = Precise_time
     data.NIG = NIG
     data.name = name
 
