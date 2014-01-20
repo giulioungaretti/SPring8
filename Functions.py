@@ -597,7 +597,7 @@ def pandify(samples, roi, name_file, save=True):
     dataframe!
     ----
     samples is a dict coming from the parallel calculation
-    log_data is the data-frame contain the spec log 
+    log_data is the data-frame contain the spec log
     '''
     for a in samples.keys():
         time, NIG, = [], []
@@ -1211,6 +1211,12 @@ def do_diff_derivatives(data, parameters_dict,
                 textcoords = 'offset points')
     ax.set_ylabel('Normalized intensity (a.u)')
     return fig, ax
+
+
+def ddderive(values):
+    temp_array = np.diff(values)
+    y = np.insert(temp_array, 0, 0)
+    return y
 
 
 def smooth_deriv(values, window=15, poly_degree=3):
