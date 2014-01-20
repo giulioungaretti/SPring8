@@ -600,10 +600,11 @@ def pandify(samples, roi, name_file, save=True):
     log_data is the data-frame contain the spec log
     '''
     for a in samples.keys():
-        time, NIG, = [], []
+        time, NIG, monitor_value = [], [], []
         for i in samples[a]:
             time.append(i.time)
             NIG.append(i.NIG)
+            monitor_value.append(i.monitor)
     data = pd.DataFrame(
         index=time, columns=['NIG', 'Int_WZ', 'Int_ZB', 'Int_TW',
                              'FWHM_x_WZ', 'FWHM_x_ZB', 'FWHM_x_TW',
@@ -612,7 +613,7 @@ def pandify(samples, roi, name_file, save=True):
                              'max_pos_y_WZ', 'max_pos_y_ZB', 'max_pos_y_TW',
                              'name',
                              'COM_x_WZ', 'COM_x_ZB', 'COM_x_TW',
-                             'COM_y_WZ', 'COM_y_ZB', 'COM_y_TW'])
+                             'COM_y_WZ', 'COM_y_ZB', 'COM_y_TW','Monitor'])
 
     Int_WZ = []
     Int_ZB = []
@@ -636,7 +637,6 @@ def pandify(samples, roi, name_file, save=True):
     COM_y_WZ = []
     COM_y_ZB = []
     COM_y_TW = []
-
     for i in roi.keys():
 
         if i == 'ZB':
@@ -705,7 +705,7 @@ def pandify(samples, roi, name_file, save=True):
     data.max_pos_y_WZ = max_pos_y_WZ
     data.NIG = NIG
     data.name = name
-
+    data.monitor = monitor_value
     data = data.sort_index()
     data.to_csv(str(name_file) + 'data_frame.csv')
     return data
