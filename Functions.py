@@ -375,19 +375,13 @@ def define_roi(files, name, cond=None, kind=2):
             roi['WZ'] = WZ
 
         # Dump roi to disk
+    print 'saving to disk'
     try:
-        roi_T = pickle.load(open(str(name) + 'ROI' + ".p", "rb"))
-        print '- ROI-dump-file found'
-        print '---------------------'
-        print 'done'
+        roi
+        print 'ROI found, dump it to disk'
+        pickle.dump(roi, open(str(name) + 'ROI' + ".p", "wb"))
     except:
-        print '- ROI-dump-file not found, creating it..'
-        try:
-            roi
-            print 'ROI found, dump it to disk'
-            pickle.dump(roi, open(str(name) + 'ROI' + ".p", "wb"))
-        except:
-            'no ROI at all , problem ! '
+        'no ROI at all , problem ! '
     return roi
 
 
@@ -886,7 +880,7 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     y : array_like, shape (N,)
         the values of the time history of the signal.
     window_size : int
-        the length of the window. Must be an odd integer number.
+        the length of the window. Must be an odd integer number. Symmetric window.
     order : int
         the order of the polynomial used in the filtering.
         Must be less then `window_size` - 1.
@@ -901,7 +895,7 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     The Savitzky-Golay is a type of low-pass filter, particularly
     suited for smoothing noisy data. The main idea behind this
     approach is to make for each point a least-square fit with a
-    polynomial of high order over a odd-sized window centered at
+    polynomial of high order over a odd-sized symmetric window centered at
     the point.
     Examples
     --------
@@ -929,14 +923,15 @@ def savitzky_golay(y, window_size, order, deriv=0, rate=1):
     try:
         window_size = np.abs(np.int(window_size))
         order = np.abs(np.int(order))
-    except ValueError, msg:
+    except ValueError:
         raise ValueError("window_size and order have to be of type int")
     if window_size % 2 != 1 or window_size < 1:
         raise TypeError("window_size size must be a positive odd number")
     if window_size < order + 2:
         raise TypeError("window_size is too small for the polynomials order")
     order_range = range(order + 1)
-    half_window = (window_size - 1) // 2
+    half_window = (window_size - 1) // 2 # symmetric window
+
     # precompute coefficients
     b = np.mat([[k ** i for i in order_range]
                for k in range(-half_window, half_window + 1)])
