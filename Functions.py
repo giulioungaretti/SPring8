@@ -407,6 +407,9 @@ def save_suhtters(name,new=False):
         try:
             roi_T = pickle.load(open(str(name) + 'shutter' + ".p", "rb"))
             print 'on_off-dump-file found, skipping'
+            if new == True:
+                print 'skipping on_off dump, creating new one'
+                raise Exception
         except:
             print 'on_off-dump-file not found, creating it..'
             try:

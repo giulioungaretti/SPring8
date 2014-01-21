@@ -29,14 +29,14 @@ class mbelog(object):
                         time_val = time.strptime(line[3:-1], format)
                         data_time.append(time.mktime(time_val))
                     if 'IR' in line:
-                        temp.appned(float(line[5:]))
+                        temp.append(float(line[5:]))
                     if '#P Kcells' in line:
-                        temperatures =  line[11:-1].split(' ')
+                        temperatures = line[11:-1].split(' ')
                         # cell_temp_As.append(temperatures[4])
                         cell_temp_In.append(temperatures[2])
                         cell_temp_Sb.append(temperatures[4])
                     if '#C Shutter(s) opened or closed:' in line:
-                        shutt =  line[32:-1].split(' ')
+                        shutt = line[32:-1].split(' ')
                         shut_time.append(time.mktime(time_val))
                         shutter_In.append(shutt[1])
                         shutter_As.append(shutt[-1])
@@ -47,8 +47,8 @@ class mbelog(object):
         # self.cell_temp_As = cell_temp_As
         self.cell_temp_In = cell_temp_In
         self.cell_temp_Sb = cell_temp_Sb
-        self.shutter_In = shutter_In 
-        self.shutter_As = shutter_As 
-        self.shutter_Sb = shutter_Sb 
+        self.shutter_In = shutter_In
+        self.shutter_As = shutter_As
+        self.shutter_Sb = shutter_Sb
         self.shut_time = shut_time
-#P Kcells  
+# P Kcells
