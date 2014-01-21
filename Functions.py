@@ -347,6 +347,7 @@ def define_roi(files, name, cond=None, kind=2):
                 raise NameError
         except NameError:
             print '- create new ROI'
+            roi = {}
         try:
             ZB
             print '-  ZB exists'
