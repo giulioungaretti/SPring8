@@ -385,10 +385,13 @@ def define_roi(files, name, cond=None, kind=2):
     return roi
 
 
-def save_suhtters(name):
+def save_suhtters(name,new=False):
     try:
         on_off = pickle.load(open(str(name) + 'shutter' + ".p", "rb"))
         print 'on_off dump found, using it !'
+        if new == True:
+            print 'skipping on_off dump, creating new one'
+            raise Exception
     except:
         print 'no on_off found, define them'
         on_off = []
@@ -412,7 +415,7 @@ def save_suhtters(name):
                 pickle.dump(on_off, open(str(name) + 'shutter' + ".p", "wb"))
             except:
                 print 'no on_off at all , problem ! '
-
+    filename =  str(name) + 'shutter' + ".p"
     return on_off
 
 
@@ -576,7 +579,7 @@ def load_data_frame(name):
         return None
 
 
-def load_spec_log(name):
+def load_spec_log(name,lines=2):
     '''
     Read the spec log file and return the log stored 
     as a panda data frame.
@@ -586,7 +589,7 @@ def load_spec_log(name):
     names = names.replace('  ', ' ').split(' ')
     spec_name = 'spec/{0}'.format(name)
     spec_log = pd.read_csv(spec_name, names=names, skiprows=0,
-                           sep=' ', comment='#', skip_footer=2)  # skip last 3 lines
+                           sep=' ', comment='#', skip_footer=lines)  # skip last 3 lines
     return spec_log.dropna()
 
 
