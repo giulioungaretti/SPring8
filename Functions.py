@@ -584,9 +584,9 @@ def load_data_frame(name):
 
 def load_spec_log(name,lines=2):
     '''
-    Read the spec log file and return the log stored 
+    Read the spec log file and return the log store
     as a panda data frame.
-    Last line is skipped.
+    Last three lines skipped.
     '''
     names = 'Time Epoch  Seconds  F.M.  bg  pico1  roi0  roi1  roi2  Monitor  Detector'
     names = names.replace('  ', ' ').split(' ')
@@ -1249,6 +1249,10 @@ def css_styling():
     except:
         print 'what are you tring to do ???'
 
+def summary(name):
+	data, parameters_dict, on_off, offset_list = loadme(name)
+	spec_df = load_spec_log(name)
+	data['Time'] = spec_df.Time.values
 
 def Version():
     return 'date 2014-01-17 tale III no filter '
