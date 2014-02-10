@@ -5,6 +5,7 @@ from numpy import where, NaN
 from numpy.random import randint
 import matplotlib.pyplot as plt
 from scipy.interpolate import UnivariateSpline
+from matplotlib.mlab import find
 import numpy as np
 import pandas as pd
 from scipy.ndimage import median_filter
@@ -19,7 +20,7 @@ import plotly as plotly
 class SPring8_image(object):
 
     '''
-    image class that reads from decetor, ccd, pilatus
+    image class that reads from detector: ccd rikagu and  pilatus
 
     ---
     list of attributes
@@ -1237,6 +1238,13 @@ def smooth_deriv(values, window=15, poly_degree=3):
     y = np.insert(d_sav, 0, 0)
     return y
 
+def FWHM(X,Y):
+    half_max = (max(Y)+min(Y)) / 2
+    d = np.sign(half_max - np.array(Y[0:-1])) - np.sign(half_max - np.array(Y[1:]))
+    #find the left and right most indexes
+    left_idx = find(d > 0)[0]
+    right_idx = find(d < 0)[-1]
+    return X[right_idx], X[left_idx], half_max #return the difference (full width)
 
 def css_styling():
     '''
@@ -1248,11 +1256,6 @@ def css_styling():
         return HTML(styles)
     except:
         print 'what are you tring to do ???'
-
-def summary(name):
-	data, parameters_dict, on_off, offset_list = loadme(name)
-	spec_df = load_spec_log(name)
-	data['Time'] = spec_df.Time.values
 
 def Version():
     return 'date 2014-01-17 tale III no filter '
