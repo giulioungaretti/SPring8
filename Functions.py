@@ -15,7 +15,8 @@ from matplotlib.patches import Rectangle
 from matplotlib.pyplot import ion, ioff, close, imshow, cm
 from IPython.display import display
 import plotly as plotly
-
+from collections import deque
+import agpy as agf
 
 class SPring8_image(object):
 
@@ -301,6 +302,33 @@ def parse_sample_parallel(i, roi, kind, std=10):
     return sample
 
 
+def parse_headers(i, kind=2):
+    '''
+    optimized for speed!
+    '''
+    sample = deque()
+    temp_image = SPring8_image(i)
+    temp_image.read_detector(name=kind)
+    sample.append(temp_image)
+
+    return sample
+
+
+def fit_parallel(i, data_df, range_pixel=[70,125, 90,370], kind=2):
+    '''
+    optimized for speed!
+    range_pixel= [y1,y2,x1,x2] '''
+
+    Monitor = data_df.Monitor[data_df.name == i].values[0]
+    temp_image = SPring8_image(i)
+    temp_image.read_detector(name=kind)
+    image = temp_image.img
+    image = image[range_pixel[0]:range_pixel[1],range_pixel[2]:range_pixel[3]] # take right 
+    image = image/Monitor
+    return agf.gaussfitter.gaussfit(image)
+
+
+
 def showrois(samples, roi, num):
     '''
     show the roi for a given number that rapresent the inxed of the detector pictures:
@@ -386,7 +414,7 @@ def define_roi(files, name, cond=None, kind=2):
     return roi
 
 
-def save_suhtters(name,new=False):
+def save_suhtters(name, new=False):
     try:
         on_off = pickle.load(open(str(name) + 'shutter' + ".p", "rb"))
         print 'on_off dump found, using it !'
@@ -419,7 +447,7 @@ def save_suhtters(name,new=False):
                 pickle.dump(on_off, open(str(name) + 'shutter' + ".p", "wb"))
             except:
                 print 'no on_off at all , problem ! '
-    filename =  str(name) + 'shutter' + ".p"
+    filename = str(name) + 'shutter' + ".p"
     return on_off
 
 
@@ -583,11 +611,11 @@ def load_data_frame(name):
         return None
 
 
-def load_spec_log(name,lines=2):
+def load_spec_log(name, lines=2):
     '''
     Read the spec log file and return the log store
     as a panda data frame.
-    Last three lines skipped.
+    Last  n * 'lines' skipped.
     '''
     names = 'Time Epoch  Seconds  F.M.  bg  pico1  roi0  roi1  roi2  Monitor  Detector'
     names = names.replace('  ', ' ').split(' ')
@@ -597,15 +625,12 @@ def load_spec_log(name,lines=2):
     return spec_log.dropna()
 
 
-
-
 def pandify(samples, roi, name_file, save=True):
     '''
     takes the result of the calculation and turns them into a sorted
     dataframe!
     ----
     samples is a dict coming from the parallel calculation
-    log_data is the data-frame contain the spec log
     '''
     for a in samples.keys():
         time, NIG, monitor_value = [], [], []
@@ -621,7 +646,7 @@ def pandify(samples, roi, name_file, save=True):
                              'max_pos_y_WZ', 'max_pos_y_ZB', 'max_pos_y_TW',
                              'name',
                              'COM_x_WZ', 'COM_x_ZB', 'COM_x_TW',
-                             'COM_y_WZ', 'COM_y_ZB', 'COM_y_TW','Monitor'])
+                             'COM_y_WZ', 'COM_y_ZB', 'COM_y_TW', 'Monitor'])
 
     Int_WZ = []
     Int_ZB = []
@@ -716,6 +741,30 @@ def pandify(samples, roi, name_file, save=True):
     data.Monitor = monitor_value
     data = data.sort_index()
     data.to_csv(str(name_file) + 'data_frame.csv')
+    return data
+
+
+def pandify_header(samples, save=True, name_file=''):
+    '''
+    takes the result of the calculation and turns them into a sorted
+    dataframe!
+    ----
+    samples is a dict coming from the parallel calculation
+    '''
+    timestamp, NIG, monitor_value, name = [], [], [], []
+    for i in samples:
+        timestamp.append(i.time)
+        NIG.append(i.NIG)
+        monitor_value.append(i.monitor)
+        name.append(str(i.file_name))
+    data = pd.DataFrame(
+        index=timestamp, columns=['NIG', 'name', 'Monitor', 'Timestamp'])
+    data.NIG = NIG
+    data.name = name
+    data.Monitor = monitor_value
+    data = data.sort_index()
+    if save:
+        data.to_csv(str(name_file) + 'data_frame.csv')
     return data
 
 
@@ -846,10 +895,10 @@ def color_ticks(fig, color_labeled_lines=True):
     for ax in fig.get_axes():
         if len(ax.lines) > 2:
             print '''
-coloring ticks...
-too much lines in one axis check the result
-coloring with last line drawn
- '''
+                coloring ticks...
+                too much lines in one axis check the result
+                coloring with last line drawn
+                 '''
         for line in ax.lines:
             if '_line' not in line.get_label():
                 for i in ax.get_yticklabels():
@@ -1238,13 +1287,17 @@ def smooth_deriv(values, window=15, poly_degree=3):
     y = np.insert(d_sav, 0, 0)
     return y
 
-def FWHM(X,Y):
-    half_max = (max(Y)+min(Y)) / 2
-    d = np.sign(half_max - np.array(Y[0:-1])) - np.sign(half_max - np.array(Y[1:]))
-    #find the left and right most indexes
+
+def FWHM(X, Y):
+    half_max = (max(Y) + min(Y)) / 2
+    d = np.sign(half_max - np.array(Y[0:-1])) - \
+        np.sign(half_max - np.array(Y[1:]))
+    # find the left and right most indexes
     left_idx = find(d > 0)[0]
     right_idx = find(d < 0)[-1]
-    return X[right_idx], X[left_idx], half_max #return the difference (full width)
+    # return the difference (full width)
+    return X[right_idx], X[left_idx], half_max
+
 
 def css_styling():
     '''
@@ -1257,5 +1310,6 @@ def css_styling():
     except:
         print 'what are you tring to do ???'
 
+
 def Version():
-    return 'date 2014-01-17 tale III no filter '
+    return 'date 2014-01-17 tale IIII no filter '
