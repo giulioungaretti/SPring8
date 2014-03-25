@@ -13,10 +13,12 @@ from scipy.optimize import curve_fit
 from scipy.ndimage.measurements import center_of_mass
 from matplotlib.patches import Rectangle
 from matplotlib.pyplot import ion, ioff, close, imshow, cm
-from IPython.display import display
 import plotly as plotly
+from IPython.display import display
 from collections import deque
 import agpy as agf
+from  scipy.ndimage.filters import median_filter
+
 
 class SPring8_image(object):
 
@@ -66,7 +68,9 @@ class SPring8_image(object):
         if name == 2:
             self.img = np.fromstring(
                 image, dtype=user_dtype).reshape(res[1], res[0])
-        # self.img = median_filter(self.img, 11)  # perform median filter 5x5
+        ### perform median filter 3 X 3 ###
+        self.img = median_filter(self.img, (3,3))
+        ###########################
         header = header_file.split('\n')
         try:
             for i in range(len(header)):
@@ -76,13 +80,12 @@ class SPring8_image(object):
                         self.header_dict[k] = l
                 if '#V1' in header[i]:
                     # first presssure saved
-                    self.NIG = float(header[i].split(' ')[3])
+                    self.NIG1 = float(header[i].split(' ')[3])
                     self.Tc = float(header[i].split(' ')[6])  # silly detail
-                   # self.Tpyro = float(header[i].split(' ')[9])  # silly
-                   # detail
                 if '#C3' in header[i]:
                     self.c3 = header[i]
                 if '#V2' in header[i]:
+                    # print header[i]
                     if header[i].split(' ')[2] == 'shutter':
                         # save iformation on the shutters
                         self.Ga = int(header[i].split(' ')[3])
@@ -95,6 +98,8 @@ class SPring8_image(object):
                         self.NIG = float(header[i].split(' ')[3])
                         # silly detail
                         self.Tpyro = float(header[i].split(' ')[4])
+                    if header[i].split(' ')[2] == 'eurotherm':
+                        self.NIG = 0.0
                 if '#L' in header[i]:
                     self.time = float(header[i + 1].split(' ')[5])
                     self.monitor = float(header[i + 1].split(' ')[-2])
@@ -326,7 +331,6 @@ def fit_parallel(i, data_df, range_pixel=[70,125, 90,370], kind=2):
     image = image[range_pixel[0]:range_pixel[1],range_pixel[2]:range_pixel[3]] # take right 
     image = image/Monitor
     return agf.gaussfitter.gaussfit(image)
-
 
 
 def showrois(samples, roi, num):
@@ -1312,4 +1316,4 @@ def css_styling():
 
 
 def Version():
-    return 'date 2014-01-17 tale IIII no filter '
+    return 'date 2014-01-17 tale IIII no filter Henri was  drunk '
